@@ -37,6 +37,11 @@ jobs:
         run: npm test
 
       - run: npm run build
+        env:
+          # Absents tant que la synchronisation n'est pas configuree : le site
+          # est alors construit en version locale, sans compte.
+          VITE_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
 
       - uses: actions/configure-pages@v5
         with:

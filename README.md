@@ -183,21 +183,59 @@ supabase/       Schéma SQL + règles de sécurité (RLS)
 Le cœur du produit est `src/domain/calcul.ts` : c'est le seul endroit où
 l'argent est calculé, et il est couvert par des tests (`npm test`).
 
-### Synchronisation multi-appareils (facultative)
+### Le compte : connexion Google et synchronisation
 
-L'application est *local-first* : elle fonctionne entièrement hors-ligne, sans
-compte. Pour ajouter la synchronisation :
+L'application est *local-first* : sans compte, elle fonctionne entièrement
+hors-ligne et tout reste sur l'appareil. Le compte ne change pas ce
+fonctionnement — il ajoute une copie sur le serveur, pour retrouver ses données
+en changeant de téléphone.
 
-1. Créer un projet Supabase **en région européenne** (RGPD).
-2. Exécuter `supabase/schema.sql` dans le SQL Editor : tables, isolation par
-   utilisatrice (RLS) et horodatage automatique.
-3. Copier `.env.example` en `.env.local` et renseigner `VITE_SUPABASE_URL` et
-   `VITE_SUPABASE_ANON_KEY`.
+Tant que `VITE_SUPABASE_URL` et `VITE_SUPABASE_ANON_KEY` sont absents, la carte
+« Mon compte » ne s'affiche pas et la librairie Supabase n'est même pas
+téléchargée par le navigateur : elle est chargée à la demande, dans un fragment
+séparé.
 
-Tant que ces variables sont absentes, la librairie Supabase n'est même pas
-téléchargée par le navigateur (import dynamique). L'écriture de l'écran de
-connexion reste à faire : `DepotSupabase` attend un `userId` et sait déjà lire
-et écrire toutes les données.
+#### Mise en service, une fois
+
+1. **Créer un projet Supabase en région européenne** (Frankfurt ou Paris). La
+   région compte : les données restent en Europe, ce qui est la condition RGPD.
+2. **Exécuter `supabase/schema.sql`** dans le SQL Editor du projet. Il crée les
+   tables, l'isolation par utilisatrice (RLS) et l'horodatage automatique.
+3. **Activer Google** dans Authentication → Providers. Supabase demande un
+   *Client ID* et un *Client Secret* à créer dans la Google Cloud Console
+   (APIs & Services → Credentials → OAuth client ID, type « Web »). L'URL de
+   redirection autorisée à donner à Google est celle qu'affiche Supabase, de la
+   forme `https://<projet>.supabase.co/auth/v1/callback`.
+4. **Déclarer l'adresse du site** dans Authentication → URL Configuration :
+   `https://capitaine-muffin.github.io/REMPLACEMENT-/` en *Site URL* et en
+   *Redirect URL*. Sans cela, la connexion revient sur la mauvaise page.
+5. **Renseigner les clés.** En local : copier `.env.example` en `.env.local`.
+   Pour le site publié : dans GitHub, Settings → Secrets and variables →
+   Actions, créer `SUPABASE_URL` et `SUPABASE_ANON_KEY`. Le workflow les injecte
+   au moment de la construction.
+
+La clé *anon* est publique par nature : elle est incluse dans le code envoyé au
+navigateur. Ce sont les règles RLS qui protègent les données, en interdisant à
+chaque compte de voir autre chose que ses propres lignes.
+
+#### Ce que fait la synchronisation
+
+À la connexion, l'application compare les deux côtés :
+
+- **compte vide** → les données locales y sont transférées ;
+- **rien de saisi en local** → celles du compte sont adoptées sans question ;
+- **des journées des deux côtés** → l'utilisatrice choisit laquelle des deux
+  versions garder. Rien n'est fusionné automatiquement : deux journées saisies
+  séparément pour la même date produiraient des doublons silencieux dans une
+  comptabilité, ce qui est pire que de trancher.
+
+Ensuite, chaque modification est renvoyée vers le compte après un court délai.
+L'écriture locale, elle, reste immédiate et inconditionnelle : perdre le réseau
+n'interrompt jamais la saisie.
+
+**Limite connue :** la résolution se fait au dernier écrivain. Deux appareils
+modifiant la même journée hors-ligne, l'un écrasera l'autre. Pour un usage
+personnel sur un téléphone et un ordinateur, c'est sans conséquence.
 
 ### Abonnement
 

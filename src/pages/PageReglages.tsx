@@ -3,7 +3,9 @@ import { useStore } from '../store/AppStore'
 import { versNombre } from '../domain/format'
 import { exporterSauvegarde, lireSauvegarde } from '../export/fichiers'
 import { supabaseActif } from '../storage/supabase'
-import { IconeExport, IconeInfo } from '../components/Icones'
+import { connexionGoogle, deconnexion } from '../storage/session'
+import { useSynchro } from '../store/SynchroContexte'
+import { IconeAlerte, IconeExport, IconeInfo } from '../components/Icones'
 import { useConfirmation } from '../components/Confirmation'
 
 export function PageReglages() {
@@ -79,6 +81,8 @@ export function PageReglages() {
         </div>
       </div>
 
+      <CarteCompte />
+
       <div className="carte">
         <header><h2>Mes données</h2></header>
         <div className="carte-corps">
@@ -149,5 +153,104 @@ export function PageReglages() {
         </div>
       </div>
     </>
+  )
+}
+
+/* --- Le compte, pour retrouver ses données sur un autre appareil ---------- */
+
+function CarteCompte() {
+  const synchro = useSynchro()
+  const [occupe, setOccupe] = useState(false)
+  const [erreur, setErreur] = useState<string>()
+
+  // Sans projet Supabase configuré, il n'y a pas de compte du tout : la carte
+  // n'a rien à dire et ne s'affiche pas.
+  if (!supabaseActif) return null
+
+  const agir = async (action: () => Promise<void>) => {
+    setOccupe(true)
+    setErreur(undefined)
+    try {
+      await action()
+    } catch (e) {
+      setErreur(e instanceof Error ? e.message : 'Opération impossible')
+    } finally {
+      setOccupe(false)
+    }
+  }
+
+  const courriel = synchro.session?.user.email
+
+  return (
+    <div className="carte">
+      <header><h2>Mon compte</h2></header>
+      <div className="carte-corps">
+        {!synchro.session ? (
+          <>
+            <p style={{ margin: 0, fontSize: '.85rem', color: 'var(--texte-doux)' }}>
+              En te connectant, tes journées, tes contrats et tes tarifs sont
+              enregistrés sur ton compte. Tu les retrouves ensuite sur un autre
+              téléphone ou sur un ordinateur, et tu ne les perds pas en changeant
+              d'appareil.
+            </p>
+            <button
+              type="button" className="btn principal" disabled={occupe}
+              onClick={() => agir(connexionGoogle)}
+            >
+              Se connecter avec Google
+            </button>
+          </>
+        ) : (
+          <>
+            <div className="note info">
+              <IconeInfo />
+              <span>
+                Connectée en tant que <strong>{courriel}</strong>.{' '}
+                {synchro.etat === 'a_jour' && 'Tes données sont sur ton compte.'}
+                {synchro.etat === 'chargement' && 'Lecture du compte…'}
+                {synchro.etat === 'transfert' && 'Transfert de tes données en cours…'}
+                {synchro.etat === 'erreur' &&
+                  `Synchronisation interrompue : ${synchro.message ?? ''} Tes données restent sur cet appareil.`}
+              </span>
+            </div>
+
+            {synchro.etat === 'conflit' && (
+              <div className="note" style={{ display: 'grid', gap: 10 }}>
+                <span style={{ display: 'flex', gap: 9 }}>
+                  <IconeAlerte />
+                  <span>
+                    Il y a des journées des deux côtés : sur cet appareil et sur
+                    ton compte. Elles ne peuvent pas être fusionnées sans risque
+                    de doublons — choisis lesquelles garder. L'autre version sera
+                    remplacée.
+                  </span>
+                </span>
+                <div className="actions">
+                  <button type="button" className="btn" onClick={synchro.garderCompte}>
+                    Garder celles du compte
+                  </button>
+                  <button type="button" className="btn" onClick={synchro.garderLocal}>
+                    Garder celles de cet appareil
+                  </button>
+                </div>
+              </div>
+            )}
+
+            <div className="actions fin">
+              <button
+                type="button" className="btn petit" disabled={occupe}
+                onClick={() => agir(deconnexion)}
+              >
+                Se déconnecter
+              </button>
+            </div>
+          </>
+        )}
+
+        {erreur && (
+          <p style={{ margin: 0, fontSize: '.83rem', color: 'var(--negatif)' }}>{erreur}</p>
+        )}
+      </div>
+    </div>
   )
 }
