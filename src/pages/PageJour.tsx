@@ -14,8 +14,10 @@ import { DetailTotaux } from '../components/Totaux'
 import { useConfirmation } from '../components/Confirmation'
 import { Modale } from '../components/Modale'
 import {
-  IconeAlerte, IconeCopie, IconeCorbeille, IconeDroite, IconeGauche, IconePlus,
+  IconeAlerte, IconeChevron, IconeCopie, IconeCorbeille, IconeDroite, IconeGauche,
+  IconePlus,
 } from '../components/Icones'
+import { useRepli } from '../store/repli'
 
 export function PageJour() {
   const s = useStore()
@@ -27,6 +29,8 @@ export function PageJour() {
   )
   const [choixOuvert, setChoixOuvert] = useState(false)
   const [nbAjoutes, setNbAjoutes] = useState(0)
+  const [actesReplies, basculerActes] = useRepli('jour-actes')
+  const [totalReplie, basculerTotal] = useRepli('jour-total')
   const [copieOuverte, setCopieOuverte] = useState(false)
 
   const contrat =
@@ -134,8 +138,16 @@ export function PageJour() {
       {/* Feuille du jour */}
       <div className="carte">
         <header>
-          <span className="pastille" style={{ background: contrat.couleur }} />
-          <h2>Actes de la journée</h2>
+          <BasculeSection
+            titre="Actes de la journée"
+            replie={actesReplies}
+            onBasculer={basculerActes}
+            resume={
+              lignes.length > 0
+                ? `${lignes.length} ligne${lignes.length > 1 ? 's' : ''} · ${euros(totaux.brut)}`
+                : undefined
+            }
+          />
           <button
             type="button" className="btn principal petit"
             onClick={() => { setNbAjoutes(0); setChoixOuvert(true) }}
@@ -144,30 +156,39 @@ export function PageJour() {
           </button>
         </header>
 
-        {lignes.length === 0 ? (
-          <div className="vide">
-            <strong>Journée vide</strong>
-            Appuie sur « Ajouter » pour noter ton premier acte.
-          </div>
-        ) : (
-          <div className="liste">
-            {lignes.map((l) => (
-              <LigneSaisie
-                key={l.id}
-                ligne={l}
-                onQuantite={(q) => s.majLigne(journee!.id, l.id, { quantite: q })}
-                onTarif={(t) => s.majLigne(journee!.id, l.id, { tarifUnitaire: t })}
-                onSupprimer={() => s.supprimerLigne(journee!.id, l.id)}
-              />
-            ))}
-          </div>
-        )}
+        {!actesReplies &&
+          (lignes.length === 0 ? (
+            <div className="vide">
+              <strong>Journée vide</strong>
+              Appuie sur « Ajouter » pour noter ton premier acte.
+            </div>
+          ) : (
+            <div className="liste">
+              {lignes.map((l) => (
+                <LigneSaisie
+                  key={l.id}
+                  ligne={l}
+                  onQuantite={(q) => s.majLigne(journee!.id, l.id, { quantite: q })}
+                  onTarif={(t) => s.majLigne(journee!.id, l.id, { tarifUnitaire: t })}
+                  onSupprimer={() => s.supprimerLigne(journee!.id, l.id)}
+                />
+              ))}
+            </div>
+          ))}
       </div>
 
       {/* Totaux du jour */}
       {lignes.length > 0 && (
         <div className="carte">
-          <header><h2>Total de la journée</h2></header>
+          <header>
+            <BasculeSection
+              titre="Total de la journée"
+              replie={totalReplie}
+              onBasculer={basculerTotal}
+              resume={`il te reste ${euros(totaux.net)}`}
+            />
+          </header>
+          {!totalReplie && (
           <div className="carte-corps">
             <DetailTotaux
               totaux={totaux}
@@ -179,6 +200,7 @@ export function PageJour() {
               }
             />
           </div>
+          )}
         </div>
       )}
 
@@ -235,6 +257,29 @@ export function PageJour() {
         />
       )}
     </>
+  )
+}
+
+/**
+ * En-tête d'une carte qui se replie. Le résumé n'apparaît qu'une fois la carte
+ * fermée : replier ne doit pas faire perdre le chiffre qu'on venait chercher.
+ */
+function BasculeSection({
+  titre, replie, resume, onBasculer,
+}: {
+  titre: string
+  replie: boolean
+  resume?: string
+  onBasculer: () => void
+}) {
+  return (
+    <button type="button" className="bascule" onClick={onBasculer} aria-expanded={!replie}>
+      <IconeChevron className={`chevron${replie ? ' replie' : ''}`} />
+      <span>
+        <h2>{titre}</h2>
+        {replie && resume && <span className="resume">{resume}</span>}
+      </span>
+    </button>
   )
 }
 

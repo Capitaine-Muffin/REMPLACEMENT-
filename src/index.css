@@ -139,6 +139,32 @@ p { margin: 0 0 .6em; }
   border-bottom: 1px solid var(--bordure);
 }
 .carte > header h2, .carte > header h3 { flex: 1; min-width: 0; }
+
+/* En-tête d'une carte repliable : toute la zone du titre est cliquable. */
+.bascule {
+  display: flex; align-items: center; gap: 8px;
+  flex: 1; min-width: 0;
+  padding: 4px 0; margin: -4px 0;
+  background: none; border: 0; cursor: pointer;
+  text-align: left; color: inherit; font: inherit;
+}
+.bascule > span { flex: 1; min-width: 0; }
+.bascule h2 { font-size: 1.05rem; }
+.bascule .resume {
+  display: block; margin-top: 1px;
+  font-size: .78rem; font-weight: 600; color: var(--texte-doux);
+}
+.bascule .chevron {
+  width: 19px; height: 19px; flex: none;
+  color: var(--texte-faible);
+  transition: transform .15s ease;
+}
+.bascule .chevron.replie { transform: rotate(-90deg); }
+.bascule:hover .chevron { color: var(--texte); }
+
+@media (prefers-reduced-motion: reduce) {
+  .bascule .chevron { transition: none; }
+}
 .carte-corps { padding: 14px; display: grid; gap: 12px; min-width: 0; }
 .carte-corps.serre { padding: 0; }
 
