@@ -7,7 +7,7 @@ import type {
 } from '../domain/types'
 import { DepotLocal } from '../storage/local'
 import { donneesInitiales, migrer, type Depot } from '../storage/depot'
-import { arrondi } from '../domain/calcul'
+import { arrondi, journeeVide } from '../domain/calcul'
 import { nouvelId } from './id'
 
 interface Store {
@@ -234,7 +234,7 @@ export function FournisseurStore({
         donnees.journees.find((j) => j.date === date && j.contratId === contratId),
       journeesDuMois: (mois) =>
         donnees.journees
-          .filter((j) => j.date.startsWith(mois))
+          .filter((j) => j.date.startsWith(mois) && !journeeVide(j))
           .sort((a, b) => a.date.localeCompare(b.date)),
 
       ajouterLigne: (date, contratId, ligne) =>
@@ -259,7 +259,18 @@ export function FournisseurStore({
           lignes: j.lignes.map((l) => (l.id === ligneId ? { ...l, ...ligne } : l)),
         })),
       supprimerLigne: (journeeId, ligneId) =>
-        majJournee(journeeId, (j) => ({ ...j, lignes: j.lignes.filter((l) => l.id !== ligneId) })),
+        modifier((d) => ({
+          ...d,
+          journees: d.journees.flatMap((j) => {
+            if (j.id !== journeeId) return [j]
+            const lignes = j.lignes.filter((l) => l.id !== ligneId)
+            // Retirer la dernière ligne referme la feuille, sauf si une note y
+            // a été écrite : sinon elle traînerait, vide, et serait comptée
+            // comme une journée travaillée.
+            if (!lignes.length && !j.notes?.trim()) return []
+            return [{ ...j, lignes, updatedAt: new Date().toISOString() }]
+          }),
+        })),
       majNotesJournee: (journeeId, notes) => majJournee(journeeId, (j) => ({ ...j, notes })),
       supprimerJournee: (journeeId) =>
         modifier((d) => ({ ...d, journees: d.journees.filter((j) => j.id !== journeeId) })),

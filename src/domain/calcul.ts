@@ -35,6 +35,15 @@ export const TOTAUX_VIDES: Totaux = {
   nbActes: 0, km: 0,
 }
 
+/**
+ * Une feuille sans aucune ligne ne compte pas comme une journée travaillée.
+ * Ajouter un acte puis le supprimer en laisse une : elle ne doit apparaître ni
+ * dans les totaux, ni dans le compteur de jours, ni sur le calendrier.
+ */
+export function journeeVide(j: Pick<Journee, 'lignes'>): boolean {
+  return j.lignes.length === 0
+}
+
 export function montantLigne(l: Ligne): number {
   return arrondi(l.quantite * l.tarifUnitaire)
 }

@@ -53,8 +53,11 @@ export function migrer(brut: unknown): DonneesApp {
     contrats: migrerContrats(d, base, catalogue),
     catalogue,
     // Les journées gardent leurs montants : une revalorisation ne réécrit
-    // jamais une feuille déjà remplie.
-    journees: Array.isArray(d.journees) ? d.journees : [],
+    // jamais une feuille déjà remplie. On écarte en revanche les feuilles
+    // restées vides, héritées d'une version qui ne les refermait pas.
+    journees: Array.isArray(d.journees)
+      ? d.journees.filter((j) => j.lignes?.length || j.notes?.trim())
+      : [],
   }
 }
 

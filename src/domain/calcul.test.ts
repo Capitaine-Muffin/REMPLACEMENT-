@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
-  calculerLignes, calculerPeriode, cotation, estDepassement, tarifApplique,
-  tarifCatalogue, ventilerParContrat,
+  calculerLignes, calculerPeriode, cotation, estDepassement, journeeVide,
+  tarifApplique, tarifCatalogue, ventilerParContrat,
 } from './calcul'
 import type { ActeCatalogue, Contrat, Journee, LettreCle, Ligne } from './types'
 
@@ -133,6 +133,16 @@ describe('calculerPeriode et ventilerParContrat', () => {
     const b = v.find((x) => x.contratId === 'c2')!
     expect(b.nbJours).toBe(1)
     expect(b.totaux.net).toBe(77.44)
+  })
+})
+
+describe('journeeVide', () => {
+  it('reconnait une feuille sans ligne', () => {
+    expect(journeeVide({ lignes: [] })).toBe(true)
+  })
+
+  it('ne compte pas comme vide une feuille qui porte au moins une ligne', () => {
+    expect(journeeVide({ lignes: [ligne({ categorie: 'acte' })] })).toBe(false)
   })
 })
 

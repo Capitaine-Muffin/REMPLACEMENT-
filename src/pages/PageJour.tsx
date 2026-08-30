@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useStore } from '../store/AppStore'
 import {
-  calculerLignes, cotation, montantLigne, tarifApplique, tarifCatalogue,
+  calculerLignes, cotation, journeeVide, montantLigne, tarifApplique, tarifCatalogue,
 } from '../domain/calcul'
 import {
   aujourdhui, dateLongue, decalerJour, estDimanche, euros, versNombre,
@@ -51,7 +51,7 @@ export function PageJour() {
   // Les dates déjà remplies, tous contrats confondus : le calendrier les met en
   // gras pour répondre d'un coup d'œil à « est-ce que j'ai noté mardi ? ».
   const joursRemplis = useMemo(
-    () => new Set(s.donnees.journees.filter((j) => j.lignes.length > 0).map((j) => j.date)),
+    () => new Set(s.donnees.journees.filter((j) => !journeeVide(j)).map((j) => j.date)),
     [s.donnees.journees],
   )
 
