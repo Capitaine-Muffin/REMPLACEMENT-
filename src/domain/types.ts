@@ -131,4 +131,4 @@ export interface DonneesApp {
   journees: Journee[]
 }
 
-export const VERSION_DONNEES = 2
+export const VERSION_DONNEES = 3

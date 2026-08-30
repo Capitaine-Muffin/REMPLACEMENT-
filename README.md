@@ -76,16 +76,27 @@ jamais le passé.
 Certains montants ne suivent pas de coefficient (consultation, majorations,
 IFD, IK) : ceux-là sont saisis en montant fixe, et se modifient directement.
 
-## ⚠️ Les valeurs de départ sont à vérifier
+## Ce qui est confirmé, et ce qui ne l'est pas
 
-L'appli est livrée pré-remplie, pour t'éviter une longue saisie au démarrage.
-Ces valeurs ont été relevées en août 2026 (avenant 7 à la convention nationale
-des sages-femmes : SF et SP à 3,20 € depuis le 1ᵉʳ janvier 2025, MSF 3,50 €,
-consultation 26,50 €, MDD 22,60 €, IFD 2,75 €, IK 0,61 € et IKM 0,91 €).
+Le catalogue livré distingue deux choses, et l'appli le montre.
 
-**Vérifie-les avec la NGAP en vigueur avant de facturer** — la source qui fait
-foi est la page des tarifs conventionnels d'ameli.fr pour les sages-femmes.
-Tout est modifiable dans l'onglet Tarifs.
+**Confirmé par une sage-femme en exercice** — affiché sans mention :
+
+| Acte | Cotation |
+| --- | --- |
+| Rééducation périnéale | SF 7,5 |
+| Visite à domicile, 2 premières (grossesse simple) | SF 16,5 |
+| Visite à domicile, suivantes (12 premiers jours) | SF 12 |
+| Visite à domicile, 2 premières (grossesse gémellaire) | SF 22,6 |
+| Indemnité de déplacement (MD) | 10 € |
+
+**Issu de recherches, non confirmé** — marqué **« à vérifier »** dans l'appli :
+consultation, MSF, majorations dimanche/férié et de nuit, IK. Corrige le montant
+et la mention disparaît d'elle-même.
+
+Les lettres clés SF et SP sont à 3,20 € (avenant 7, 1ᵉʳ janvier 2025). La source
+qui fait foi reste la page des tarifs conventionnels d'ameli.fr pour les
+sages-femmes.
 
 ## Vie privée
 

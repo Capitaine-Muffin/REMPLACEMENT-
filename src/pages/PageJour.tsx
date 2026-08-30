@@ -7,6 +7,7 @@ import {
   aujourdhui, dateLongue, decalerJour, estDimanche, euros, versNombre,
 } from '../domain/format'
 import { nomFerie } from '../domain/feries'
+import { aVerifier } from '../domain/catalogue'
 import type { ActeCatalogue, Categorie, Ligne } from '../domain/types'
 import { CATEGORIES } from '../domain/types'
 import { DetailTotaux } from '../components/Totaux'
@@ -377,6 +378,7 @@ function ChoixActe({
                   {cotation(a, lettres)} · {CATEGORIES.find((c) => c.value === a.categorie)?.court}
                 </div>
               </div>
+              {aVerifier(a.note) && <span className="etiquette alerte">à vérifier</span>}
               <span className="montant">
                 {euros(tarifCatalogue(a, lettres))}
                 {a.unite === 'km' && <span style={{ fontWeight: 500 }}> /km</span>}

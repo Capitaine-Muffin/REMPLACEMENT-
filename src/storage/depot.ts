@@ -1,4 +1,4 @@
-import type { ActeCatalogue, DonneesApp } from '../domain/types'
+import type { ActeCatalogue, Contrat, DonneesApp } from '../domain/types'
 import { VERSION_DONNEES } from '../domain/types'
 import { catalogueParDefaut, lettresClesParDefaut } from '../domain/catalogue'
 
@@ -49,7 +49,7 @@ export function migrer(brut: unknown): DonneesApp {
     reglages: { ...base.reglages, ...(d.reglages ?? {}) },
     lettresCles:
       Array.isArray(d.lettresCles) && d.lettresCles.length ? d.lettresCles : base.lettresCles,
-    contrats: Array.isArray(d.contrats) && d.contrats.length ? d.contrats : base.contrats,
+    contrats: migrerContrats(d, base),
     catalogue: migrerCatalogue(d, base),
     // Les journées gardent leurs montants : une revalorisation ne réécrit
     // jamais une feuille déjà remplie.
@@ -57,20 +57,42 @@ export function migrer(brut: unknown): DonneesApp {
   }
 }
 
+/** Vrai pour un acte fourni par l'application (par opposition à créé par elle). */
+const estFourni = (id: string) => id.startsWith('def-')
+
 /**
- * Version 1 : chaque acte portait un prix en dur. Version 2 : les actes sont
- * cotés « lettre clé × coefficient », ce qui rend les revalorisations
- * indolores. Les actes fournis par l'application sont donc remplacés par le
- * nouveau catalogue ; ceux que l'utilisatrice a créés sont conservés tels
- * quels, comme des montants fixes.
+ * Le catalogue livré évolue à chaque correction de cotation : il est donc
+ * remplacé dès que les données viennent d'une version antérieure. Les actes
+ * que l'utilisatrice a créés, eux, ne sont jamais touchés.
+ *
+ * Les journées déjà saisies ne dépendent pas du catalogue : chaque ligne porte
+ * son propre libellé, sa cotation et son tarif.
  */
 function migrerCatalogue(d: Partial<DonneesApp>, base: DonneesApp): ActeCatalogue[] {
   if (!Array.isArray(d.catalogue) || !d.catalogue.length) return base.catalogue
-  if ((d.version ?? 1) >= 2) return d.catalogue
+  if ((d.version ?? 1) >= VERSION_DONNEES) return d.catalogue
 
   const personnalises = d.catalogue
-    .filter((a) => a.personnalise)
+    .filter((a) => a.personnalise && !estFourni(a.id))
     .map<ActeCatalogue>((a) => ({ ...a, tarification: a.tarification ?? 'forfait' }))
 
   return [...base.catalogue, ...personnalises]
+}
+
+/**
+ * Les identifiants du catalogue livré sont réattribués quand celui-ci est
+ * remplacé : un tarif de contrat qui les visait désignerait alors un autre
+ * acte. Ces dépassements-là sont donc retirés plutôt que déplacés sur le
+ * mauvais acte ; ceux qui visent un acte créé par l'utilisatrice restent.
+ */
+function migrerContrats(d: Partial<DonneesApp>, base: DonneesApp): Contrat[] {
+  if (!Array.isArray(d.contrats) || !d.contrats.length) return base.contrats
+  if ((d.version ?? 1) >= VERSION_DONNEES) return d.contrats
+
+  return d.contrats.map((c) => ({
+    ...c,
+    tarifs: Object.fromEntries(
+      Object.entries(c.tarifs ?? {}).filter(([acteId]) => !estFourni(acteId)),
+    ),
+  }))
 }

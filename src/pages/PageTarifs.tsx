@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useStore } from '../store/AppStore'
 import { cotation, tarifCatalogue } from '../domain/calcul'
 import { euros, versNombre } from '../domain/format'
-import { AVERTISSEMENT_TARIFS } from '../domain/catalogue'
+import { AVERTISSEMENT_TARIFS, aVerifier } from '../domain/catalogue'
 import type { ActeCatalogue, Categorie, LettreCle } from '../domain/types'
 import { CATEGORIES } from '../domain/types'
 import { useConfirmation } from '../components/Confirmation'
@@ -230,9 +230,12 @@ function FicheActe({ acte }: { acte: ActeCatalogue }) {
           <div className="meta">
             {cotation(acte, lettres) || 'sans cotation'}
             {acte.archive && ' · archivé'}
-            {acte.note && ` · ${acte.note}`}
+            {acte.note && !aVerifier(acte.note) && ` · ${acte.note}`}
           </div>
         </button>
+        {aVerifier(acte.note) && (
+          <span className="etiquette alerte" title={acte.note}>à vérifier</span>
+        )}
         <span className="montant">
           {euros(tarifCatalogue(acte, lettres))}
           {acte.unite === 'km' && <span style={{ fontWeight: 500 }}> /km</span>}
@@ -241,6 +244,16 @@ function FicheActe({ acte }: { acte: ActeCatalogue }) {
 
       {deplie && (
         <div className="carte-corps" style={{ background: 'var(--surface-2)' }}>
+          {aVerifier(acte.note) && (
+            <div className="note">
+              <IconeAlerte />
+              <span>
+                {acte.note}. Ce montant vient de mes recherches, pas de toi.
+                Corrige-le et la mention disparaîtra.
+              </span>
+            </div>
+          )}
+
           <label>
             Nom de l'acte
             <input
@@ -316,7 +329,9 @@ function FicheActe({ acte }: { acte: ActeCatalogue }) {
                 <input
                   type="number" inputMode="decimal" min={0} step={0.05}
                   value={acte.tarif}
-                  onChange={(e) => maj({ tarif: versNombre(e.target.value) })}
+                  onChange={(e) =>
+                    maj({ tarif: versNombre(e.target.value), note: undefined })
+                  }
                 />
               </label>
             </div>
