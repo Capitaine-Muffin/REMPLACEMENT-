@@ -3,6 +3,10 @@
 Remplace la feuille Word journalière : tu notes tes actes, l'appli calcule la
 rétrocession et te sort un récapitulatif à la fin du mois.
 
+👉 **L'application est ici : https://capitaine-muffin.github.io/REMPLACEMENT-/**
+
+Elle se met à jour toute seule à chaque modification du code.
+
 ---
 
 ## À quoi ça sert
@@ -74,7 +78,8 @@ seules.
 
 ## Pour installer l'appli sur ton téléphone
 
-Ouvre l'adresse du site dans le navigateur, puis :
+Ouvre https://capitaine-muffin.github.io/REMPLACEMENT-/ dans le navigateur,
+puis :
 
 - **iPhone** (Safari) : bouton Partager → « Sur l'écran d'accueil ».
 - **Android** (Chrome) : menu ⋮ → « Ajouter à l'écran d'accueil ».
@@ -94,8 +99,10 @@ npm test           # tests des calculs
 npm run build      # version de production dans dist/
 ```
 
-Aucun serveur n'est nécessaire : `dist/` est un site statique, hébergeable tel
-quel (Netlify, Vercel, GitHub Pages, un simple dossier sur un serveur…).
+Aucun serveur n'est nécessaire : `dist/` est un site statique. Il est publié sur
+GitHub Pages par `.github/workflows/pages.yml`, à chaque poussée sur la branche
+de développement — les tests tournent avant, une version aux calculs cassés ne
+part pas en ligne.
 
 ### Organisation du code
 
