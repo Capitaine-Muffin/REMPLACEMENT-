@@ -45,6 +45,11 @@ export function PageMois() {
 
   return (
     <>
+      <header className="impression entete-impression">
+        <h1>Récapitulatif — {libelleMois(mois)}</h1>
+        {s.donnees.reglages.prenom && <p>{s.donnees.reglages.prenom}</p>}
+      </header>
+
       <div className="carte">
         <div className="carte-corps">
           <div className="navigateur">
@@ -61,6 +66,25 @@ export function PageMois() {
             >
               <IconeDroite />
             </button>
+
+            {journees.length > 0 && (
+              <div className="actions-icones">
+                <button
+                  type="button" className="btn icone"
+                  aria-label="Exporter le mois vers Excel" title="Exporter vers Excel"
+                  onClick={() => exporterMoisCSV(mois, journees, contrats)}
+                >
+                  <IconeExport />
+                </button>
+                <button
+                  type="button" className="btn icone"
+                  aria-label="Imprimer le récapitulatif" title="Imprimer"
+                  onClick={() => window.print()}
+                >
+                  <IconeImprimer />
+                </button>
+              </div>
+            )}
           </div>
           <div className="vignettes">
             <div className="vignette">
@@ -71,10 +95,13 @@ export function PageMois() {
               <div className="cle">Actes</div>
               <div className="val">{nombre(global.nbActes)}</div>
             </div>
-            <div className="vignette">
-              <div className="cle">Km</div>
-              <div className="val">{nombre(global.km)}</div>
-            </div>
+            {/* La vignette des kilomètres ne s'affiche que s'il y en a. */}
+            {global.km > 0 && (
+              <div className="vignette">
+                <div className="cle">Km</div>
+                <div className="val">{nombre(global.km)}</div>
+              </div>
+            )}
             <div className="vignette">
               <div className="cle">Net</div>
               <div className="val">{euros(global.net)}</div>
@@ -152,8 +179,9 @@ export function PageMois() {
             </div>
           )}
 
-          {/* Détail jour par jour */}
-          <div className="carte">
+          {/* Détail jour par jour : encombrant à l'écran, indispensable sur le
+              papier remis à la titulaire ou au comptable. */}
+          <div className="carte impression">
             <header><h2>Jour par jour</h2></header>
             <div className="defilant">
               <table className="tableau">
@@ -187,21 +215,6 @@ export function PageMois() {
             </div>
           </div>
 
-          <div className="carte no-print">
-            <div className="carte-corps">
-              <div className="actions">
-                <button
-                  type="button" className="btn"
-                  onClick={() => exporterMoisCSV(mois, journees, contrats)}
-                >
-                  <IconeExport /> Exporter en Excel (CSV)
-                </button>
-                <button type="button" className="btn" onClick={() => window.print()}>
-                  <IconeImprimer /> Imprimer / PDF
-                </button>
-              </div>
-            </div>
-          </div>
         </>
       )}
 
