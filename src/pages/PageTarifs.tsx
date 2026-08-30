@@ -12,21 +12,21 @@ import {
 
 export function PageTarifs() {
   const s = useStore()
-  const [groupe, setGroupe] = useState<Groupe | 'verifier'>('acte')
+  const [groupe, setGroupe] = useState<Groupe | 'verifier' | 'miens'>('acte')
   const [recherche, setRecherche] = useState('')
   const [voirArchives, setVoirArchives] = useState(false)
 
   const nbAVerifier = s.donnees.catalogue.filter((a) => !a.archive && aVerifier(a)).length
+  const nbMiens = s.donnees.catalogue.filter((a) => !a.archive && a.personnalise).length
   const q = recherche.trim().toLowerCase()
   const actes = s.donnees.catalogue
     .filter((a) => voirArchives || !a.archive)
-    .filter((a) =>
-      q
-        ? true
-        : groupe === 'verifier'
-          ? aVerifier(a)
-          : categoriesDuGroupe(groupe).includes(a.categorie),
-    )
+    .filter((a) => {
+      if (q) return true
+      if (groupe === 'verifier') return aVerifier(a)
+      if (groupe === 'miens') return a.personnalise
+      return categoriesDuGroupe(groupe).includes(a.categorie)
+    })
     .filter((a) => !q || a.libelle.toLowerCase().includes(q) || a.code.toLowerCase().includes(q))
 
   return (
@@ -55,6 +55,15 @@ export function PageTarifs() {
               {g.court}
             </button>
           ))}
+          {nbMiens > 0 && (
+            <button
+              type="button" className="puce"
+              aria-pressed={groupe === 'miens'}
+              onClick={() => setGroupe('miens')}
+            >
+              Mes actes ({nbMiens})
+            </button>
+          )}
           {nbAVerifier > 0 && (
             <button
               type="button" className="puce"
@@ -69,7 +78,11 @@ export function PageTarifs() {
 
       <div className="carte">
         {actes.length === 0 ? (
-          <div className="vide">Aucun acte dans cette catégorie.</div>
+          <div className="vide">
+            {groupe === 'miens'
+              ? "Tu n'as pas encore créé d'acte. Le bouton ci-dessous en ajoute un."
+              : 'Aucun acte dans cette catégorie.'}
+          </div>
         ) : (
           <div className="liste">
             {actes.map((a) => <FicheActe key={a.id} acte={a} />)}
@@ -82,8 +95,12 @@ export function PageTarifs() {
           type="button" className="btn principal"
           onClick={() =>
             s.ajouterActe({
+              // Les onglets « Mes actes » et « À vérifier » ne désignent pas une
+              // catégorie : un acte créé depuis là est un acte coté.
               categorie:
-                groupe === 'verifier' || q ? 'acte' : (categoriesDuGroupe(groupe)[0] ?? 'acte'),
+                q || groupe === 'verifier' || groupe === 'miens'
+                  ? 'acte'
+                  : (categoriesDuGroupe(groupe)[0] ?? 'acte'),
               libelle: 'Nouvel acte',
             })
           }
