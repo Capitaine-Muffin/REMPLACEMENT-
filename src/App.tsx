@@ -54,9 +54,13 @@ function Coquille() {
       <header className="entete">
         <div style={{ flex: 1, minWidth: 0 }}>
           <h1>{TITRES[onglet]}</h1>
-          <div className="sous">
-            {libelleMois(mois)} · {euros(netDuMois)} pour toi
-          </div>
+          {/* Pas sur l'onglet Mois : la page y affiche le mois qu'on parcourt,
+              et deux mois différents à l'écran en même temps se contredisent. */}
+          {onglet !== 'mois' && (
+            <div className="sous">
+              {libelleMois(mois)} · {euros(netDuMois)} pour toi
+            </div>
+          )}
         </div>
       </header>
 

@@ -18,6 +18,7 @@ export function PageMois() {
 
   const journees = s.journeesDuMois(mois)
   const contrats = s.donnees.contrats
+  const vide = journees.length === 0
 
   const ventilation = useMemo(() => ventilerParContrat(journees, contrats), [journees, contrats])
   const global = useMemo(() => calculerPeriode(journees, contrats), [journees, contrats])
@@ -58,25 +59,33 @@ export function PageMois() {
               <IconeDroite />
             </button>
 
-            {journees.length > 0 && (
-              <div className="actions-icones">
-                <button
-                  type="button" className="btn icone"
-                  aria-label="Exporter le mois vers Excel" title="Exporter vers Excel"
-                  onClick={() => exporterMoisCSV(mois, journees, contrats)}
-                >
-                  <IconeExport />
-                </button>
-                <button
-                  type="button" className="btn icone"
-                  aria-label="Imprimer le récapitulatif" title="Imprimer"
-                  onClick={() => window.print()}
-                >
-                  <IconeImprimer />
-                </button>
-              </div>
-            )}
+            {/* Toujours présents, désactivés sur un mois vide : des boutons qui
+                apparaissent et disparaissent font sauter la barre d'un mois à
+                l'autre. */}
+            <div className="actions-icones">
+              <button
+                type="button" className="btn icone"
+                disabled={vide}
+                aria-label="Exporter le mois vers Excel"
+                title={vide ? 'Rien à exporter ce mois-ci' : 'Exporter vers Excel'}
+                onClick={() => exporterMoisCSV(mois, journees, contrats)}
+              >
+                <IconeExport />
+              </button>
+              <button
+                type="button" className="btn icone"
+                disabled={vide}
+                aria-label="Imprimer le récapitulatif"
+                title={vide ? 'Rien à imprimer ce mois-ci' : 'Imprimer'}
+                onClick={() => window.print()}
+              >
+                <IconeImprimer />
+              </button>
+            </div>
           </div>
+          {/* Trois compteurs, pas de montant : le net figure déjà dans l'en-tête
+              de l'application et dans la carte de chaque contrat. Des nombres
+              courts tiennent sans être rognés, quelle que soit la largeur. */}
           <div className="vignettes">
             <div className="vignette">
               <div className="cle">Jours</div>
@@ -86,22 +95,15 @@ export function PageMois() {
               <div className="cle">Actes</div>
               <div className="val">{nombre(global.nbActes)}</div>
             </div>
-            {/* La vignette des kilomètres ne s'affiche que s'il y en a. */}
-            {global.km > 0 && (
-              <div className="vignette">
-                <div className="cle">Km</div>
-                <div className="val">{nombre(global.km)}</div>
-              </div>
-            )}
             <div className="vignette">
-              <div className="cle">Net</div>
-              <div className="val">{euros(global.net)}</div>
+              <div className="cle">Km</div>
+              <div className="val">{nombre(global.km)}</div>
             </div>
           </div>
         </div>
       </div>
 
-      {journees.length === 0 ? (
+      {vide ? (
         <div className="carte">
           <div className="vide">
             <strong>Rien ce mois-ci</strong>
