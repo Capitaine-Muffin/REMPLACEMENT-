@@ -105,3 +105,7 @@ export const IconeEtoile = ({ pleine, ...p }: P & { pleine?: boolean }) => (
 export const IconeChevron = (p: P) => (
   <svg {...base} {...p}><path d="M6 9.5 12 15.5l6-6" /></svg>
 )
+
+export const IconeValide = (p: P) => (
+  <svg {...base} {...p}><path d="m5 12.5 4.5 4.5L19 7.5" /></svg>
+)

@@ -365,6 +365,40 @@ button.ligne:hover { background: var(--surface-2); }
 /* Montant déjà saisi, rappelé sur la pastille du contrat concerné. */
 .puce-montant { margin-left: 6px; opacity: .75; font-weight: 700; }
 
+/* Les contrats défilent, le total reste. */
+.ligne-contrats { display: flex; align-items: center; gap: 8px; }
+.ligne-contrats .puces { flex: 1; min-width: 0; }
+.ligne-contrats .puce-lecture { flex: none; }
+
+/* Pastille de lecture seule : elle informe, elle ne se sélectionne pas. */
+.puce-lecture {
+  background: var(--accent-doux);
+  border-color: transparent;
+  color: var(--accent-texte);
+  cursor: default;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Accusé de réception après l'ajout d'un acte. */
+.confirmation {
+  display: flex; align-items: center; gap: 8px;
+  margin-bottom: 10px; padding: 9px 12px;
+  background: var(--accent-doux); color: var(--accent-texte);
+  border-radius: var(--rayon-s);
+  font-size: .85rem; font-weight: 600;
+  animation: apparition .18s ease-out;
+}
+.confirmation svg { width: 18px; height: 18px; flex: none; }
+
+@keyframes apparition {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .confirmation { animation: none; }
+}
+
 dialog {
   width: min(560px, 100vw - 24px);
   max-height: 86vh;

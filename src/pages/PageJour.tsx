@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useStore } from '../store/AppStore'
 import {
   calculerLignes, cotation, montantLigne, tarifApplique, tarifCatalogue,
@@ -15,7 +15,7 @@ import { useConfirmation } from '../components/Confirmation'
 import { Modale } from '../components/Modale'
 import {
   IconeAlerte, IconeChevron, IconeCopie, IconeCorbeille, IconeDroite, IconeGauche,
-  IconePlus,
+  IconePlus, IconeValide,
 } from '../components/Icones'
 import { useRepli } from '../store/repli'
 
@@ -29,6 +29,7 @@ export function PageJour() {
   )
   const [choixOuvert, setChoixOuvert] = useState(false)
   const [nbAjoutes, setNbAjoutes] = useState(0)
+  const [dernierAjout, setDernierAjout] = useState<string | null>(null)
   const [actesReplies, basculerActes] = useRepli('jour-actes')
   const [totalReplie, basculerTotal] = useRepli('jour-total')
   // Les notes servent rarement : repliées d'origine, elles restent ouvertes
@@ -44,6 +45,13 @@ export function PageJour() {
 
   const ferie = nomFerie(date)
   const dimanche = estDimanche(date)
+
+  const totalDuJour = s.donnees.journees
+    .filter((j) => j.date === date)
+    .reduce((somme, j) => {
+      const c = s.donnees.contrats.find((x) => x.id === j.contratId)
+      return somme + calculerLignes(j.lignes, c).brut
+    }, 0)
 
   if (!contrat) {
     return (
@@ -61,6 +69,7 @@ export function PageJour() {
   // lignes (C + MSF + acte CCAM), autant les enchaîner d'un même geste.
   const ajouter = (acte: ActeCatalogue) => {
     setNbAjoutes((n) => n + 1)
+    setDernierAjout(acte.libelle || acte.code)
     s.ajouterLigne(date, contrat.id, {
       acteId: acte.id,
       // On fige la cotation et le tarif du jour : la ligne reste lisible même
@@ -123,7 +132,8 @@ export function PageJour() {
           )}
 
           {contratsActifs.length > 1 && (
-            <div className="puces" role="group" aria-label="Contrat">
+            <div className="ligne-contrats">
+              <div className="puces" role="group" aria-label="Contrat">
               {contratsActifs.map((c) => {
                 // Le montant déjà noté pour ce contrat ce jour-là : sans lui, on
                 // croit sa journée vide alors qu'elle est saisie sur l'autre.
@@ -140,6 +150,13 @@ export function PageJour() {
                   </button>
                 )
               })}
+              </div>
+
+              {/* Hors de la rangée qui défile : le total de la date, tous
+                  contrats confondus, doit rester visible en permanence. */}
+              {totalDuJour > 0 && (
+                <span className="puce puce-lecture">Total {euros(totalDuJour)}</span>
+              )}
             </div>
           )}
         </div>
@@ -160,7 +177,7 @@ export function PageJour() {
           />
           <button
             type="button" className="btn principal petit"
-            onClick={() => { setNbAjoutes(0); setChoixOuvert(true) }}
+            onClick={() => { setNbAjoutes(0); setDernierAjout(null); setChoixOuvert(true) }}
           >
             <IconePlus /> Ajouter
           </button>
@@ -260,6 +277,8 @@ export function PageJour() {
       <ChoixActe
         ouverte={choixOuvert}
         nbAjoutes={nbAjoutes}
+        dernierAjout={dernierAjout}
+        onEffacerConfirmation={() => setDernierAjout(null)}
         onFermer={() => setChoixOuvert(false)}
         onChoisir={ajouter}
       />
@@ -381,10 +400,12 @@ function LigneSaisie({
 /* --- Choix d'un acte dans le catalogue ----------------------------------- */
 
 function ChoixActe({
-  ouverte, nbAjoutes, onFermer, onChoisir,
+  ouverte, nbAjoutes, dernierAjout, onEffacerConfirmation, onFermer, onChoisir,
 }: {
   ouverte: boolean
   nbAjoutes: number
+  dernierAjout: string | null
+  onEffacerConfirmation: () => void
   onFermer: () => void
   onChoisir: (a: ActeCatalogue) => void
 }) {
@@ -392,6 +413,14 @@ function ChoixActe({
   const [recherche, setRecherche] = useState('')
   const [groupe, setGroupe] = useState<Groupe | 'favoris'>('favoris')
   const lettres = s.donnees.lettresCles
+
+  // La confirmation s'efface seule : c'est un accusé de réception, pas un
+  // message à congédier.
+  useEffect(() => {
+    if (!dernierAjout) return
+    const minuteur = window.setTimeout(onEffacerConfirmation, 2200)
+    return () => window.clearTimeout(minuteur)
+  }, [dernierAjout, nbAjoutes, onEffacerConfirmation])
 
   const disponibles = s.donnees.catalogue.filter((a) => !a.archive)
   const q = recherche.trim().toLowerCase()
@@ -410,6 +439,15 @@ function ChoixActe({
       ouverte={ouverte}
       onFermer={onFermer}
       actions={
+        <>
+          {dernierAjout && (
+            <div className="confirmation" role="status" key={nbAjoutes}>
+              <IconeValide />
+              {/* Tournure neutre : « ajouté » ne s'accorde pas avec le nom de
+                  l'acte, qui peut être masculin ou féminin. */}
+              <span>Ajouté : {dernierAjout}</span>
+            </div>
+          )}
         <div className="actions">
           <span style={{ flex: 1, alignSelf: 'center', fontSize: '.85rem', fontWeight: 600 }}>
             {nbAjoutes === 0
@@ -420,6 +458,7 @@ function ChoixActe({
             Terminé
           </button>
         </div>
+        </>
       }
     >
       <input
