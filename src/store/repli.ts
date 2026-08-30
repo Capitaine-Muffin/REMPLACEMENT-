@@ -5,14 +5,15 @@ import { useCallback, useState } from 'react'
  * l'appareil, pas une donnée de travail : il reste donc dans le navigateur et
  * n'est ni sauvegardé ni synchronisé.
  */
-export function useRepli(cle: string): [boolean, () => void] {
+export function useRepli(cle: string, replieParDefaut = false): [boolean, () => void] {
   const stockage = `remplacement.repli.${cle}`
 
   const [replie, setReplie] = useState(() => {
     try {
-      return localStorage.getItem(stockage) === '1'
+      const memorise = localStorage.getItem(stockage)
+      return memorise === null ? replieParDefaut : memorise === '1'
     } catch {
-      return false
+      return replieParDefaut
     }
   })
 

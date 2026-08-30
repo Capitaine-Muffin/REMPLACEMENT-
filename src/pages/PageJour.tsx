@@ -8,8 +8,8 @@ import {
 } from '../domain/format'
 import { nomFerie } from '../domain/feries'
 import { aVerifier } from '../domain/catalogue'
-import type { ActeCatalogue, Categorie, Ligne } from '../domain/types'
-import { CATEGORIES } from '../domain/types'
+import type { ActeCatalogue, Groupe, Ligne } from '../domain/types'
+import { CATEGORIES, GROUPES, categoriesDuGroupe } from '../domain/types'
 import { DetailTotaux } from '../components/Totaux'
 import { useConfirmation } from '../components/Confirmation'
 import { Modale } from '../components/Modale'
@@ -31,6 +31,9 @@ export function PageJour() {
   const [nbAjoutes, setNbAjoutes] = useState(0)
   const [actesReplies, basculerActes] = useRepli('jour-actes')
   const [totalReplie, basculerTotal] = useRepli('jour-total')
+  // Les notes servent rarement : repliées d'origine, elles restent ouvertes
+  // ensuite si on les ouvre une fois.
+  const [notesRepliees, basculerNotes] = useRepli('jour-notes', true)
   const [copieOuverte, setCopieOuverte] = useState(false)
 
   const contrat =
@@ -207,6 +210,15 @@ export function PageJour() {
       {/* Notes et actions */}
       {journee && (
         <div className="carte">
+          <header>
+            <BasculeSection
+              titre="Notes et actions"
+              replie={notesRepliees}
+              onBasculer={basculerNotes}
+              resume={journee.notes?.trim() || undefined}
+            />
+          </header>
+          {!notesRepliees && (
           <div className="carte-corps">
             <label>
               Notes (pas de nom ni d'information médicale)
@@ -234,6 +246,7 @@ export function PageJour() {
               </button>
             </div>
           </div>
+          )}
         </div>
       )}
 
@@ -370,7 +383,7 @@ function ChoixActe({
 }) {
   const s = useStore()
   const [recherche, setRecherche] = useState('')
-  const [categorie, setCategorie] = useState<Categorie | 'favoris'>('favoris')
+  const [groupe, setGroupe] = useState<Groupe | 'favoris'>('favoris')
   const lettres = s.donnees.lettresCles
 
   const disponibles = s.donnees.catalogue.filter((a) => !a.archive)
@@ -380,9 +393,9 @@ function ChoixActe({
     ? disponibles.filter(
         (a) => a.libelle.toLowerCase().includes(q) || a.code.toLowerCase().includes(q),
       )
-    : categorie === 'favoris'
+    : groupe === 'favoris'
       ? disponibles.filter((a) => a.favori)
-      : disponibles.filter((a) => a.categorie === categorie)
+      : disponibles.filter((a) => categoriesDuGroupe(groupe).includes(a.categorie))
 
   return (
     <Modale
@@ -411,18 +424,18 @@ function ChoixActe({
       {!q && (
         <div className="puces" role="group" aria-label="Filtrer">
           <button
-            type="button" className="puce" aria-pressed={categorie === 'favoris'}
-            onClick={() => setCategorie('favoris')}
+            type="button" className="puce" aria-pressed={groupe === 'favoris'}
+            onClick={() => setGroupe('favoris')}
           >
             Mes favoris
           </button>
-          {CATEGORIES.map((c) => (
+          {GROUPES.map((g) => (
             <button
-              key={c.value} type="button" className="puce"
-              aria-pressed={categorie === c.value}
-              onClick={() => setCategorie(c.value)}
+              key={g.value} type="button" className="puce"
+              aria-pressed={groupe === g.value}
+              onClick={() => setGroupe(g.value)}
             >
-              {c.court}
+              {g.court}
             </button>
           ))}
         </div>
@@ -431,7 +444,7 @@ function ChoixActe({
       <div className="liste" style={{ margin: '0 -14px' }}>
         {resultats.length === 0 ? (
           <div className="vide">
-            {categorie === 'favoris' && !q
+            {groupe === 'favoris' && !q
               ? "Aucun favori. Marque tes actes courants d'une étoile dans l'onglet Tarifs."
               : 'Aucun résultat.'}
           </div>

@@ -153,6 +153,8 @@ p { margin: 0 0 .6em; }
 .bascule .resume {
   display: block; margin-top: 1px;
   font-size: .78rem; font-weight: 600; color: var(--texte-doux);
+  /* Une note longue tient sur une ligne plutôt que d'étirer l'en-tête. */
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .bascule .chevron {
   width: 19px; height: 19px; flex: none;

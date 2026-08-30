@@ -3,8 +3,8 @@ import { useStore } from '../store/AppStore'
 import { cotation, tarifCatalogue } from '../domain/calcul'
 import { euros, versNombre } from '../domain/format'
 import { AVERTISSEMENT_TARIFS, aVerifier } from '../domain/catalogue'
-import type { ActeCatalogue, Categorie, LettreCle } from '../domain/types'
-import { CATEGORIES } from '../domain/types'
+import type { ActeCatalogue, Categorie, Groupe, LettreCle } from '../domain/types'
+import { CATEGORIES, GROUPES, categoriesDuGroupe } from '../domain/types'
 import { useConfirmation } from '../components/Confirmation'
 import {
   IconeAlerte, IconeCorbeille, IconeEtoile, IconeInfo, IconePlus,
@@ -12,7 +12,7 @@ import {
 
 export function PageTarifs() {
   const s = useStore()
-  const [categorie, setCategorie] = useState<Categorie | 'verifier'>('acte')
+  const [groupe, setGroupe] = useState<Groupe | 'verifier'>('acte')
   const [recherche, setRecherche] = useState('')
   const [voirArchives, setVoirArchives] = useState(false)
 
@@ -21,7 +21,11 @@ export function PageTarifs() {
   const actes = s.donnees.catalogue
     .filter((a) => voirArchives || !a.archive)
     .filter((a) =>
-      q ? true : categorie === 'verifier' ? aVerifier(a) : a.categorie === categorie,
+      q
+        ? true
+        : groupe === 'verifier'
+          ? aVerifier(a)
+          : categoriesDuGroupe(groupe).includes(a.categorie),
     )
     .filter((a) => !q || a.libelle.toLowerCase().includes(q) || a.code.toLowerCase().includes(q))
 
@@ -42,20 +46,20 @@ export function PageTarifs() {
 
       {!q && (
         <div className="puces" role="group" aria-label="Catégorie">
-          {CATEGORIES.map((c) => (
+          {GROUPES.map((g) => (
             <button
-              key={c.value} type="button" className="puce"
-              aria-pressed={categorie === c.value}
-              onClick={() => setCategorie(c.value)}
+              key={g.value} type="button" className="puce"
+              aria-pressed={groupe === g.value}
+              onClick={() => setGroupe(g.value)}
             >
-              {c.court}
+              {g.court}
             </button>
           ))}
           {nbAVerifier > 0 && (
             <button
               type="button" className="puce"
-              aria-pressed={categorie === 'verifier'}
-              onClick={() => setCategorie('verifier')}
+              aria-pressed={groupe === 'verifier'}
+              onClick={() => setGroupe('verifier')}
             >
               À vérifier ({nbAVerifier})
             </button>
@@ -78,7 +82,8 @@ export function PageTarifs() {
           type="button" className="btn principal"
           onClick={() =>
             s.ajouterActe({
-              categorie: categorie === 'verifier' || q ? 'acte' : categorie,
+              categorie:
+                groupe === 'verifier' || q ? 'acte' : (categoriesDuGroupe(groupe)[0] ?? 'acte'),
               libelle: 'Nouvel acte',
             })
           }

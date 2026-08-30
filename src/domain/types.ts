@@ -13,9 +13,27 @@ export type Categorie = 'acte' | 'majoration' | 'id' | 'ik'
 export const CATEGORIES: { value: Categorie; label: string; court: string }[] = [
   { value: 'acte', label: 'Actes cotés', court: 'Actes' },
   { value: 'majoration', label: 'Majorations (nuit, dimanche, férié...)', court: 'Majorations' },
-  { value: 'id', label: 'Indemnités de déplacement (ID / IFD)', court: 'ID' },
+  { value: 'id', label: 'Indemnités de déplacement (ID / MD)', court: 'ID' },
   { value: 'ik', label: 'Indemnités kilométriques (IK)', court: 'IK' },
 ]
+
+/**
+ * Regroupement des catégories pour naviguer dans le catalogue. Les indemnités
+ * de déplacement et les indemnités kilométriques répondent à la même question
+ * — « je me suis déplacée » — et tiennent donc dans un seul onglet, même si
+ * elles restent distinctes dans les totaux et dans les règles du contrat.
+ */
+export type Groupe = 'acte' | 'majoration' | 'deplacement'
+
+export const GROUPES: { value: Groupe; court: string; categories: Categorie[] }[] = [
+  { value: 'acte', court: 'Actes', categories: ['acte'] },
+  { value: 'majoration', court: 'Majorations', categories: ['majoration'] },
+  { value: 'deplacement', court: 'Déplacements', categories: ['id', 'ik'] },
+]
+
+/** Catégories couvertes par un onglet. */
+export const categoriesDuGroupe = (groupe: Groupe): Categorie[] =>
+  GROUPES.find((g) => g.value === groupe)?.categories ?? []
 
 /**
  * Une lettre clé de la NGAP (SF, SP...). Sa valeur est fixée par la convention
