@@ -6,6 +6,8 @@ import {
 } from '../domain/format'
 import { nomFerie } from '../domain/feries'
 import { DetailTotaux } from '../components/Totaux'
+import { BasculeSection } from '../components/BasculeSection'
+import { useRepli } from '../store/repli'
 import { exporterMoisCSV, resumePourTitulaire } from '../export/fichiers'
 import { IconeDroite, IconeExport, IconeGauche, IconeImprimer } from '../components/Icones'
 import { Modale } from '../components/Modale'
@@ -117,39 +119,14 @@ export function PageMois() {
         <>
           {/* Un bloc par contrat : c'est ce qu'on envoie au titulaire */}
           {ventilation.map((v) => (
-            <div className="carte" key={v.contratId}>
-              <header>
-                <span className="pastille" style={{ background: v.contrat?.couleur ?? '#999' }} />
-                <h2>{v.contrat?.nom ?? 'Contrat supprimé'}</h2>
-                <span className="etiquette">{v.nbJours} j</span>
-              </header>
-              <div className="carte-corps">
-                <DetailTotaux
-                  totaux={v.totaux}
-                  contrat={v.contrat}
-                  provision={
-                    s.donnees.reglages.afficherProvision
-                      ? { taux: s.donnees.reglages.tauxProvision }
-                      : undefined
-                  }
-                />
-                {v.contrat && (
-                  <div className="actions no-print">
-                    <button
-                      type="button" className="btn petit"
-                      onClick={() =>
-                        copier(
-                          resumePourTitulaire(mois, v.contrat!, v.totaux, v.nbJours),
-                          v.contratId,
-                        )
-                      }
-                    >
-                      {copie === v.contratId ? 'Copié !' : 'Copier le récapitulatif'}
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
+            <CarteContrat
+              key={v.contratId}
+              ventilation={v}
+              copie={copie === v.contratId}
+              onCopier={() =>
+                copier(resumePourTitulaire(mois, v.contrat!, v.totaux, v.nbJours), v.contratId)
+              }
+            />
           ))}
 
           {/* Total tous contrats confondus */}
@@ -231,5 +208,57 @@ export function PageMois() {
         />
       </Modale>
     </>
+  )
+}
+
+/* --- Le récapitulatif d'un contrat, repliable ---------------------------- */
+
+function CarteContrat({
+  ventilation: v, copie, onCopier,
+}: {
+  ventilation: ReturnType<typeof ventilerParContrat>[number]
+  copie: boolean
+  onCopier: () => void
+}) {
+  const s = useStore()
+  // Une clé par contrat : replier l'un ne replie pas les autres.
+  const [replie, basculer] = useRepli(`mois-contrat-${v.contratId}`)
+
+  return (
+    <div className="carte">
+      <header>
+        <span className="pastille" style={{ background: v.contrat?.couleur ?? '#999' }} />
+        <BasculeSection
+          titre={v.contrat?.nom ?? 'Contrat supprimé'}
+          replie={replie}
+          onBasculer={basculer}
+          // Le nombre de jours est déjà sur l'étiquette à droite du titre.
+          resume={`il te reste ${euros(v.totaux.net)}`}
+        />
+        <span className="etiquette">{v.nbJours} j</span>
+      </header>
+
+      {/* Sur le papier le détail est toujours imprimé, quel que soit le repli. */}
+      <div className={replie ? 'impression' : undefined}>
+        <div className="carte-corps">
+          <DetailTotaux
+            totaux={v.totaux}
+            contrat={v.contrat}
+            provision={
+              s.donnees.reglages.afficherProvision
+                ? { taux: s.donnees.reglages.tauxProvision }
+                : undefined
+            }
+          />
+          {v.contrat && (
+            <div className="actions no-print">
+              <button type="button" className="btn petit" onClick={onCopier}>
+                {copie ? 'Copié !' : 'Copier le récapitulatif'}
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
   )
 }

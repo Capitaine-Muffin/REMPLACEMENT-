@@ -22,6 +22,7 @@ interface Store {
   /* Contrats */
   ajouterContrat: (c?: Partial<Contrat>) => Contrat
   majContrat: (id: string, c: Partial<Contrat>) => void
+  reordonnerContrats: (ids: string[]) => void
   supprimerContrat: (id: string) => void
   /* Catalogue */
   ajouterActe: (a?: Partial<ActeCatalogue>) => ActeCatalogue
@@ -169,16 +170,22 @@ export function FournisseurStore({
           ...d,
           contrats: d.contrats.map((x) => (x.id === id ? { ...x, ...c } : x)),
         })),
+      reordonnerContrats: (ids) =>
+        modifier((d) => ({
+          ...d,
+          // L'ordre décide de l'affichage, et le premier contrat est celui
+          // proposé à l'ouverture d'une journée.
+          contrats: ids
+            .map((id) => d.contrats.find((c) => c.id === id))
+            .filter((c): c is Contrat => Boolean(c)),
+        })),
+
       supprimerContrat: (id) =>
         modifier((d) => ({
           ...d,
           contrats: d.contrats.filter((x) => x.id !== id),
           // Les feuilles rattachées au contrat disparaissent avec lui.
           journees: d.journees.filter((j) => j.contratId !== id),
-          reglages:
-            d.reglages.contratParDefautId === id
-              ? { ...d.reglages, contratParDefautId: undefined }
-              : d.reglages,
         })),
 
       ajouterActe: (a) => {

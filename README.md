@@ -32,6 +32,11 @@ déplacement et tes kilomètres. L'appli affiche tout de suite :
 | **Tarifs** | Tu corriges les montants et tu ajoutes tes propres actes. |
 | **Réglages** | Ton prénom, ta mise de côté, et la sauvegarde de tes données. |
 
+Dans **Contrats**, la poignée à gauche de chaque contrat permet de les remettre
+dans l'ordre voulu, au doigt ou avec les flèches haut et bas. Cet ordre est
+celui des pastilles sur ta journée, et le premier contrat est celui proposé
+d'office.
+
 ## Le point important : ce qui rentre dans les 30 %
 
 Selon le contrat, la rétrocession se calcule sur les actes seuls, ou aussi sur

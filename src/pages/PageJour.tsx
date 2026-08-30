@@ -13,19 +13,20 @@ import { DetailTotaux } from '../components/Totaux'
 import { useConfirmation } from '../components/Confirmation'
 import { Modale } from '../components/Modale'
 import {
-  IconeAlerte, IconeChevron, IconeCopie, IconeCorbeille, IconeDroite, IconeGauche,
-  IconePlus, IconeValide,
+  IconeAlerte, IconeCopie, IconeCorbeille, IconeDroite, IconeGauche, IconePlus,
+  IconeValide,
 } from '../components/Icones'
 import { useRepli } from '../store/repli'
+import { BasculeSection } from '../components/BasculeSection'
 
 export function PageJour() {
   const s = useStore()
   const demanderConfirmation = useConfirmation()
   const [date, setDate] = useState(aujourdhui)
   const contratsActifs = s.donnees.contrats.filter((c) => c.actif)
-  const [contratId, setContratId] = useState(
-    () => s.donnees.reglages.contratParDefautId ?? contratsActifs[0]?.id ?? '',
-  )
+  // Le premier contrat de la liste : c'est l'ordre défini dans l'écran
+  // Contrats qui décide, plutôt qu'un réglage séparé à tenir à jour.
+  const [contratId, setContratId] = useState(() => contratsActifs[0]?.id ?? '')
   const [choixOuvert, setChoixOuvert] = useState(false)
   const [nbAjoutes, setNbAjoutes] = useState(0)
   const [dernierAjout, setDernierAjout] = useState<string | null>(null)
@@ -306,29 +307,6 @@ export function PageJour() {
         />
       )}
     </>
-  )
-}
-
-/**
- * En-tête d'une carte qui se replie. Le résumé n'apparaît qu'une fois la carte
- * fermée : replier ne doit pas faire perdre le chiffre qu'on venait chercher.
- */
-function BasculeSection({
-  titre, replie, resume, onBasculer,
-}: {
-  titre: string
-  replie: boolean
-  resume?: string
-  onBasculer: () => void
-}) {
-  return (
-    <button type="button" className="bascule" onClick={onBasculer} aria-expanded={!replie}>
-      <IconeChevron className={`chevron${replie ? ' replie' : ''}`} />
-      <span>
-        <h2>{titre}</h2>
-        {replie && resume && <span className="resume">{resume}</span>}
-      </span>
-    </button>
   )
 }
 

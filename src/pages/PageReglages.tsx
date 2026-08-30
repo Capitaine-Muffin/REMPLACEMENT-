@@ -40,18 +40,6 @@ export function PageReglages() {
               onChange={(e) => s.majReglages({ prenom: e.target.value })}
             />
           </label>
-          <label>
-            Contrat proposé par défaut
-            <select
-              value={r.contratParDefautId ?? ''}
-              onChange={(e) => s.majReglages({ contratParDefautId: e.target.value || undefined })}
-            >
-              <option value="">Le premier de la liste</option>
-              {s.donnees.contrats.map((c) => (
-                <option key={c.id} value={c.id}>{c.nom}</option>
-              ))}
-            </select>
-          </label>
         </div>
       </div>
 

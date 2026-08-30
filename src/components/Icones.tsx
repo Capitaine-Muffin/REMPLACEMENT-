@@ -109,3 +109,9 @@ export const IconeChevron = (p: P) => (
 export const IconeValide = (p: P) => (
   <svg {...base} {...p}><path d="m5 12.5 4.5 4.5L19 7.5" /></svg>
 )
+
+export const IconePoignee = (p: P) => (
+  <svg {...base} {...p}>
+    <path d="M9 6h.01M15 6h.01M9 12h.01M15 12h.01M9 18h.01M15 18h.01" strokeWidth={2.4} />
+  </svg>
+)

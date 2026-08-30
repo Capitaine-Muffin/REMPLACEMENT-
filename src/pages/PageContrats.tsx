@@ -1,10 +1,11 @@
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import { COULEURS, useStore } from '../store/AppStore'
 import { euros, pourcent, versNombre } from '../domain/format'
 import { cotation, tarifCatalogue } from '../domain/calcul'
 import type { Contrat } from '../domain/types'
 import { CATEGORIES } from '../domain/types'
 import { Modale } from '../components/Modale'
+import { Reordonnable } from '../components/Reordonnable'
 import { useConfirmation } from '../components/Confirmation'
 import { IconeCorbeille, IconeInfo, IconePlus } from '../components/Icones'
 
@@ -19,17 +20,21 @@ export function PageContrats() {
         <span>
           Un contrat = un cabinet ou une sage-femme que tu remplaces. C'est ici
           que tu règles ton pourcentage de rétrocession et ce qu'il concerne.
+          {s.donnees.contrats.length > 1 &&
+            " L'ordre de la liste est celui des pastilles sur ta journée, et le premier est proposé d'office."}
         </span>
       </div>
 
-      {s.donnees.contrats.map((c) => (
-        <FicheContrat
-          key={c.id}
-          contrat={c}
-          ouvert={ouvert === c.id}
-          onBasculer={() => setOuvert(ouvert === c.id ? null : c.id)}
-        />
-      ))}
+      <Reordonnable elements={s.donnees.contrats} onReordonner={s.reordonnerContrats}>
+        {(c, poignee) => (
+          <FicheContrat
+            contrat={c}
+            poignee={poignee}
+            ouvert={ouvert === c.id}
+            onBasculer={() => setOuvert(ouvert === c.id ? null : c.id)}
+          />
+        )}
+      </Reordonnable>
 
       <button
         type="button" className="btn principal large"
@@ -42,9 +47,10 @@ export function PageContrats() {
 }
 
 function FicheContrat({
-  contrat, ouvert, onBasculer,
+  contrat, poignee, ouvert, onBasculer,
 }: {
   contrat: Contrat
+  poignee: ReactNode
   ouvert: boolean
   onBasculer: () => void
 }) {
@@ -63,8 +69,15 @@ function FicheContrat({
 
   return (
     <div className="carte">
-      <button type="button" className="ligne" onClick={onBasculer} style={{ padding: '13px 14px' }}>
+      <div className="ligne" style={{ padding: '13px 14px', gap: 6 }}>
+        {poignee}
         <span className="pastille" style={{ background: contrat.couleur }} />
+        <button
+          type="button" onClick={onBasculer}
+          style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 10,
+                   background: 'none', border: 0, padding: 0, font: 'inherit',
+                   color: 'inherit', textAlign: 'left', cursor: 'pointer' }}
+        >
         <span className="principal-txt">
           <span className="titre">{contrat.nom}</span>
           <span className="meta">
@@ -73,8 +86,9 @@ function FicheContrat({
             {!contrat.actif && ' · archive'}
           </span>
         </span>
-        <span className="etiquette">{ouvert ? 'Fermer' : 'Modifier'}</span>
-      </button>
+          <span className="etiquette">{ouvert ? 'Fermer' : 'Modifier'}</span>
+        </button>
+      </div>
 
       {ouvert && (
         <div className="carte-corps" style={{ borderTop: '1px solid var(--bordure)' }}>

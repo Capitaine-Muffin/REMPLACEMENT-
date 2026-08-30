@@ -482,3 +482,34 @@ dialog::backdrop { background: rgba(8, 12, 16, .5); }
 .tarif-unitaire strong { color: var(--texte); }
 
 .saisie-tarif { margin-top: 2px; }
+
+/* --- Liste réordonnable -------------------------------------------------- */
+
+.reordonnable { display: grid; gap: 16px; }
+
+.reordonnable-bloc {
+  transition: transform .16s ease;
+  /* Le bloc soulevé doit passer au-dessus de ses voisins. */
+  position: relative;
+}
+.reordonnable-bloc.saisi {
+  z-index: 5;
+  box-shadow: 0 6px 20px rgba(16, 24, 32, .18);
+  border-radius: var(--rayon);
+}
+
+.poignee {
+  display: grid; place-items: center;
+  width: 30px; min-height: 38px; flex: none;
+  padding: 0; border: 0; background: none;
+  color: var(--texte-faible); cursor: grab;
+  /* Sans cela le navigateur interprète le glissement comme un défilement. */
+  touch-action: none;
+}
+.poignee:active { cursor: grabbing; }
+.poignee:hover { color: var(--texte-doux); }
+.poignee svg { width: 20px; height: 20px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .reordonnable-bloc { transition: none; }
+}
