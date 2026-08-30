@@ -54,9 +54,11 @@ function Coquille() {
       <header className="entete">
         <div style={{ flex: 1, minWidth: 0 }}>
           <h1>{TITRES[onglet]}</h1>
-          {/* Pas sur l'onglet Mois : la page y affiche le mois qu'on parcourt,
-              et deux mois différents à l'écran en même temps se contredisent. */}
-          {onglet !== 'mois' && (
+          {/* Uniquement sur la feuille du jour : c'est là qu'on gagne l'argent
+              du mois, et savoir où on en est y a du sens. Sur l'écran du mois
+              il annoncerait un mois différent de celui qu'on parcourt ; sur les
+              écrans de réglage, il n'aurait aucun rapport avec ce qu'on y fait. */}
+          {onglet === 'jour' && (
             <div className="sous">
               {libelleMois(mois)} · {euros(netDuMois)} pour toi
             </div>
