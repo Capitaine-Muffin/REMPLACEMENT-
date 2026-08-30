@@ -26,7 +26,7 @@ déplacement et tes kilomètres. L'appli affiche tout de suite :
 
 | Onglet | Ce que tu y fais |
 | --- | --- |
-| **Jour** | Tu notes tes actes de la journée. C'est l'écran que tu utiliseras 95 % du temps. |
+| **Jour** | Tu notes tes actes de la journée. C'est l'écran que tu utiliseras 95 % du temps. Le calendrier met en gras les jours déjà saisis. |
 | **Mois** | Tu vois le récapitulatif du mois et tu l'exportes. |
 | **Contrats** | Tu règles ton pourcentage de rétrocession, pour chaque cabinet que tu remplaces. |
 | **Tarifs** | Tu corriges les montants et tu ajoutes tes propres actes. |

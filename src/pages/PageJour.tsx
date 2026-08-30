@@ -12,6 +12,7 @@ import { CATEGORIES, GROUPES, categoriesDuGroupe } from '../domain/types'
 import { DetailTotaux } from '../components/Totaux'
 import { useConfirmation } from '../components/Confirmation'
 import { Modale } from '../components/Modale'
+import { ChoixDate } from '../components/ChoixDate'
 import {
   IconeAlerte, IconeCopie, IconeCorbeille, IconeDroite, IconeGauche, IconePlus,
   IconeValide,
@@ -29,6 +30,7 @@ export function PageJour() {
   const [contratId, setContratId] = useState(() => contratsActifs[0]?.id ?? '')
   const [choixOuvert, setChoixOuvert] = useState(false)
   const [nbAjoutes, setNbAjoutes] = useState(0)
+  const [calendrierOuvert, setCalendrierOuvert] = useState(false)
   const [dernierAjout, setDernierAjout] = useState<string | null>(null)
   const [actesReplies, basculerActes] = useRepli('jour-actes')
   const [totalReplie, basculerTotal] = useRepli('jour-total')
@@ -45,6 +47,13 @@ export function PageJour() {
 
   const ferie = nomFerie(date)
   const dimanche = estDimanche(date)
+
+  // Les dates déjà remplies, tous contrats confondus : le calendrier les met en
+  // gras pour répondre d'un coup d'œil à « est-ce que j'ai noté mardi ? ».
+  const joursRemplis = useMemo(
+    () => new Set(s.donnees.journees.filter((j) => j.lignes.length > 0).map((j) => j.date)),
+    [s.donnees.journees],
+  )
 
   const totalDuJour = s.donnees.journees
     .filter((j) => j.date === date)
@@ -94,14 +103,13 @@ export function PageJour() {
             >
               <IconeGauche />
             </button>
-            <div className="courant">
-              <label className="sr" htmlFor="date-jour">Date</label>
-              <input
-                id="date-jour" type="date" value={date}
-                onChange={(e) => e.target.value && setDate(e.target.value)}
-                style={{ textAlign: 'center' }}
-              />
-            </div>
+            <button
+              type="button" className="btn choix-date"
+              onClick={() => setCalendrierOuvert(true)}
+            >
+              {dateLongue(date)}
+              {date.slice(0, 4) !== aujourdhui().slice(0, 4) && ` ${date.slice(0, 4)}`}
+            </button>
             <button
               type="button" className="btn icone" aria-label="Jour suivant"
               onClick={() => setDate(decalerJour(date, 1))}
@@ -110,16 +118,13 @@ export function PageJour() {
             </button>
           </div>
 
-          <div className="actions">
-            <span style={{ flex: 1, fontSize: '.85rem', color: 'var(--texte-doux)', alignSelf: 'center' }}>
-              {dateLongue(date)}
-            </span>
-            {date !== aujourdhui() && (
+          {date !== aujourdhui() && (
+            <div className="actions fin">
               <button type="button" className="btn petit" onClick={() => setDate(aujourdhui())}>
-                Aujourd'hui
+                Revenir à aujourd'hui
               </button>
-            )}
-          </div>
+            </div>
+          )}
 
           {(ferie || dimanche) && (
             <div className="note">
@@ -284,6 +289,14 @@ export function PageJour() {
           )}
         </div>
       )}
+
+      <ChoixDate
+        date={date}
+        joursRemplis={joursRemplis}
+        ouverte={calendrierOuvert}
+        onFermer={() => setCalendrierOuvert(false)}
+        onChoisir={setDate}
+      />
 
       <ChoixActe
         ouverte={choixOuvert}

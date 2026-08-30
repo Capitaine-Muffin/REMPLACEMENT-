@@ -513,3 +513,60 @@ dialog::backdrop { background: rgba(8, 12, 16, .5); }
 @media (prefers-reduced-motion: reduce) {
   .reordonnable-bloc { transition: none; }
 }
+
+/* --- Calendrier ---------------------------------------------------------- */
+
+.choix-date {
+  flex: 1; min-width: 0;
+  justify-content: center;
+  font-weight: 700;
+  /* La date est déjà en français : pas de majuscule initiale forcée ailleurs. */
+  text-transform: none;
+}
+
+.calendrier {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+
+.calendrier-entete {
+  padding-bottom: 4px;
+  text-align: center;
+  font-size: .7rem; font-weight: 700; letter-spacing: .03em;
+  color: var(--texte-doux);
+}
+
+.calendrier-jour {
+  aspect-ratio: 1;
+  display: grid; place-items: center;
+  border: 1px solid transparent; border-radius: var(--rayon-s);
+  background: var(--surface-2); color: var(--texte);
+  font: inherit; font-size: .9rem; font-variant-numeric: tabular-nums;
+  cursor: pointer;
+}
+.calendrier-jour:hover { border-color: var(--bordure-forte); }
+
+/* Un jour déjà saisi : c'est l'information qu'on vient chercher ici. */
+.calendrier-jour.rempli { font-weight: 800; background: var(--accent-doux); color: var(--accent-texte); }
+
+/* Dimanches et jours fériés, où les majorations s'appliquent. */
+.calendrier-jour.chome { color: var(--alerte); }
+.calendrier-jour.chome.rempli { color: var(--accent-texte); background: var(--alerte-fond); }
+
+.calendrier-jour.aujourdhui { border-color: var(--texte-faible); }
+.calendrier-jour.choisi {
+  background: var(--accent); border-color: var(--accent); color: var(--sur-accent);
+  font-weight: 800;
+}
+
+.calendrier-legende {
+  display: flex; align-items: center; gap: 8px;
+  margin: 0;
+  font-size: .76rem; color: var(--texte-doux); line-height: 1.4;
+}
+.calendrier-jour.exemple {
+  aspect-ratio: auto;
+  width: 26px; height: 26px; flex: none;
+  cursor: default; font-size: .78rem;
+}
