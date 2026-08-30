@@ -83,10 +83,11 @@ avec l'acte (`source`) et affichée dans l'appli. Rien n'est déduit, arrondi ni
 reconstitué — soit un montant vient d'une sage-femme, soit d'une source citée,
 soit il n'y est pas.
 
-Un acte non confirmé porte une pastille **« à vérifier »**. En l'ouvrant, tu
-lis d'où vient le montant, et deux gestes suffisent : corriger la valeur, ou
-appuyer sur « Ce montant est bon, je confirme » si elle est juste. Dans les
-deux cas la pastille disparaît et la source devient « Confirmé par toi ».
+En ouvrant un acte, tu lis d'où vient son montant. S'il n'a pas encore été
+vérifié, deux gestes suffisent : corriger la valeur, ou appuyer sur « Marquer
+comme vérifié » si elle est juste. Dans les deux cas la source devient
+« Vérifié par toi », et la valeur est alors conservée telle quelle lors des
+mises à jour de l'application.
 
 **Confirmé par une sage-femme en exercice** — affiché sans mention :
 
@@ -98,10 +99,9 @@ deux cas la pastille disparaît et la source devient « Confirmé par toi ».
 | Visite à domicile, 2 premières (grossesse gémellaire) | SF 22,6 |
 | Indemnité de déplacement (MD) | 10 € |
 
-**Issu de recherches, non confirmé** — marqué **« à vérifier »** dans l'appli :
-consultation, MSF, majorations dimanche/férié et de nuit, IK, et tous les actes
-CCAM. Corrige le montant et la mention disparaît d'elle-même. Un filtre
-« À vérifier » dans l'onglet Tarifs les regroupe pour les contrôler d'un bloc.
+**Issu de recherches, non confirmé** : consultation, MSF, majorations
+dimanche/férié et de nuit, IK, et tous les actes CCAM. Leur provenance est
+écrite sous chacun d'eux.
 
 Les actes CCAM (frottis JKHD001, pose de DIU JKLD001, changement JKKD001,
 ablation JKGD001, pose d'implant QZLA004, retrait d'implant QZGA002) sont

@@ -2,28 +2,24 @@ import { useState } from 'react'
 import { useStore } from '../store/AppStore'
 import { cotation, tarifCatalogue } from '../domain/calcul'
 import { euros, versNombre } from '../domain/format'
-import { AVERTISSEMENT_TARIFS, aVerifier } from '../domain/catalogue'
+import { aVerifier } from '../domain/catalogue'
 import type { ActeCatalogue, Categorie, Groupe, LettreCle } from '../domain/types'
 import { CATEGORIES, GROUPES, categoriesDuGroupe } from '../domain/types'
 import { useConfirmation } from '../components/Confirmation'
-import {
-  IconeAlerte, IconeCorbeille, IconeEtoile, IconeInfo, IconePlus,
-} from '../components/Icones'
+import { IconeCorbeille, IconeEtoile, IconeInfo, IconePlus } from '../components/Icones'
 
 export function PageTarifs() {
   const s = useStore()
-  const [groupe, setGroupe] = useState<Groupe | 'verifier' | 'miens'>('acte')
+  const [groupe, setGroupe] = useState<Groupe | 'miens'>('acte')
   const [recherche, setRecherche] = useState('')
   const [voirArchives, setVoirArchives] = useState(false)
 
-  const nbAVerifier = s.donnees.catalogue.filter((a) => !a.archive && aVerifier(a)).length
   const nbMiens = s.donnees.catalogue.filter((a) => !a.archive && a.personnalise).length
   const q = recherche.trim().toLowerCase()
   const actes = s.donnees.catalogue
     .filter((a) => voirArchives || !a.archive)
     .filter((a) => {
       if (q) return true
-      if (groupe === 'verifier') return aVerifier(a)
       if (groupe === 'miens') return a.personnalise
       return categoriesDuGroupe(groupe).includes(a.categorie)
     })
@@ -32,11 +28,6 @@ export function PageTarifs() {
   return (
     <>
       <LettresCles />
-
-      <div className="note">
-        <IconeAlerte />
-        <span>{AVERTISSEMENT_TARIFS}</span>
-      </div>
 
       <input
         type="text" placeholder="Rechercher un acte..."
@@ -64,15 +55,6 @@ export function PageTarifs() {
               Mes actes ({nbMiens})
             </button>
           )}
-          {nbAVerifier > 0 && (
-            <button
-              type="button" className="puce"
-              aria-pressed={groupe === 'verifier'}
-              onClick={() => setGroupe('verifier')}
-            >
-              À vérifier ({nbAVerifier})
-            </button>
-          )}
         </div>
       )}
 
@@ -97,10 +79,10 @@ export function PageTarifs() {
             s.ajouterActe({
               // Les onglets « Mes actes » et « À vérifier » ne désignent pas une
               // catégorie : un acte créé depuis là est un acte coté.
+              // « Mes actes » ne désigne pas une catégorie : un acte créé
+              // depuis là est un acte coté.
               categorie:
-                q || groupe === 'verifier' || groupe === 'miens'
-                  ? 'acte'
-                  : (categoriesDuGroupe(groupe)[0] ?? 'acte'),
+                q || groupe === 'miens' ? 'acte' : (categoriesDuGroupe(groupe)[0] ?? 'acte'),
               libelle: 'Nouvel acte',
             })
           }
@@ -270,9 +252,6 @@ function FicheActe({ acte }: { acte: ActeCatalogue }) {
             {acte.note && !aVerifier(acte) && ` · ${acte.note}`}
           </div>
         </button>
-        {aVerifier(acte) && (
-          <span className="etiquette alerte" title={acte.note}>à vérifier</span>
-        )}
         <span className="montant">
           {euros(tarifCatalogue(acte, lettres))}
           {acte.unite === 'km' && <span style={{ fontWeight: 500 }}> /km</span>}
@@ -281,29 +260,24 @@ function FicheActe({ acte }: { acte: ActeCatalogue }) {
 
       {deplie && (
         <div className="carte-corps" style={{ background: 'var(--surface-2)' }}>
-          {aVerifier(acte) ? (
-            <div className="note" style={{ display: 'grid', gap: 8 }}>
+          {acte.source && (
+            <div className="note info" style={{ display: 'grid', gap: 8 }}>
               <span style={{ display: 'flex', gap: 9 }}>
-                <IconeAlerte />
+                <IconeInfo />
                 <span>
-                  <strong>D'où vient ce montant :</strong> {acte.source ?? 'origine inconnue'}.
-                  Personne ne l'a confirmé.
+                  <strong>D'où vient ce montant :</strong> {acte.source}
                 </span>
               </span>
-              <button
-                type="button" className="btn petit"
-                style={{ justifySelf: 'start' }}
-                onClick={() => maj({ verifie: true, source: 'Confirmé par toi' })}
-              >
-                Ce montant est bon, je confirme
-              </button>
+              {aVerifier(acte) && (
+                <button
+                  type="button" className="btn petit"
+                  style={{ justifySelf: 'start' }}
+                  onClick={() => maj({ verifie: true, source: 'Vérifié par toi' })}
+                >
+                  Marquer comme vérifié
+                </button>
+              )}
             </div>
-          ) : (
-            acte.source && (
-              <p style={{ margin: 0, fontSize: '.76rem', color: 'var(--texte-faible)' }}>
-                {acte.source}
-              </p>
-            )
           )}
 
           <label>

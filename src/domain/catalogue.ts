@@ -3,7 +3,7 @@ import type { ActeCatalogue, LettreCle } from './types'
 /**
  * Catalogue livré à la première ouverture.
  *
- * Chaque montant porte son origine (`source`) et un drapeau `verifie`. Aucun
+ * Chaque montant porte son origine (`source`), affichée avec l'acte. Aucun
  * chiffre n'est déduit, arrondi ou reconstitué : soit il vient d'une
  * sage-femme en exercice, soit d'une source citée, soit il n'y est pas.
  *
@@ -11,11 +11,11 @@ import type { ActeCatalogue, LettreCle } from './types'
  * tarif figé : elles suivent la valeur de la lettre clé, réglée dans l'écran
  * Tarifs.
  */
-export const AVERTISSEMENT_TARIFS =
-  'Les lignes marquées « à vérifier » viennent de recherches sur internet, ' +
-  'pas d\'une sage-femme : contrôle-les avant de facturer.'
-
-/** Un acte dont le montant n'a été confirmé par personne. */
+/**
+ * Un acte dont le montant n'a encore été confirmé par personne. L'application
+ * ne le signale plus d'elle-même, mais l'information sert toujours : à la mise
+ * à jour, un acte vérifié garde la valeur que l'utilisatrice lui a donnée.
+ */
 export const aVerifier = (acte: Pick<ActeCatalogue, 'verifie'>) => !acte.verifie
 
 const CONFIRME = 'Confirmé par une sage-femme en exercice'
