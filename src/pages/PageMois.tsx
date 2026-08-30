@@ -22,15 +22,6 @@ export function PageMois() {
   const ventilation = useMemo(() => ventilerParContrat(journees, contrats), [journees, contrats])
   const global = useMemo(() => calculerPeriode(journees, contrats), [journees, contrats])
 
-  const annee = mois.slice(0, 4)
-  const cumulAnnee = useMemo(
-    () => calculerPeriode(
-      s.donnees.journees.filter((j) => j.date.startsWith(annee)),
-      contrats,
-    ),
-    [s.donnees.journees, contrats, annee],
-  )
-
   const copier = async (texte: string, cle: string) => {
     try {
       await navigator.clipboard.writeText(texte)
@@ -234,26 +225,6 @@ export function PageMois() {
           onFocus={(e) => e.currentTarget.select()}
         />
       </Modale>
-
-      <div className="carte">
-        <header><h2>Depuis le 1er janvier {annee}</h2></header>
-        <div className="carte-corps">
-          <div className="vignettes">
-            <div className="vignette">
-              <div className="cle">Encaissé</div>
-              <div className="val">{euros(cumulAnnee.brut)}</div>
-            </div>
-            <div className="vignette">
-              <div className="cle">Rétrocédé</div>
-              <div className="val">{euros(cumulAnnee.retrocession)}</div>
-            </div>
-            <div className="vignette">
-              <div className="cle">Net</div>
-              <div className="val">{euros(cumulAnnee.net)}</div>
-            </div>
-          </div>
-        </div>
-      </div>
     </>
   )
 }
