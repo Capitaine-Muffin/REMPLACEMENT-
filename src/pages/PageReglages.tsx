@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react'
 import { useStore } from '../store/AppStore'
 import { versNombre } from '../domain/format'
+import { THEMES } from '../domain/types'
 import { exporterSauvegarde, lireSauvegarde } from '../export/fichiers'
 import { supabaseActif } from '../storage/supabase'
 import { connexionGoogle, deconnexion } from '../storage/session'
@@ -42,6 +43,23 @@ export function PageReglages() {
               onChange={(e) => s.majReglages({ prenom: e.target.value })}
             />
           </label>
+        </div>
+      </div>
+
+      <div className="carte">
+        <header><h2>Apparence</h2></header>
+        <div className="carte-corps">
+          <div className="puces" role="group" aria-label="Apparence">
+            {THEMES.map((t) => (
+              <button
+                key={t.value} type="button" className="puce"
+                aria-pressed={r.theme === t.value}
+                onClick={() => s.majReglages({ theme: t.value })}
+              >
+                {t.libelle}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 

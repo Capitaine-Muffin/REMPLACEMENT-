@@ -16,7 +16,7 @@ export interface Depot {
 export function donneesInitiales(): DonneesApp {
   return {
     version: VERSION_DONNEES,
-    reglages: { prenom: '', tauxProvision: 0.25, afficherProvision: true },
+    reglages: { prenom: '', theme: 'clair', tauxProvision: 0.25, afficherProvision: true },
     lettresCles: lettresClesParDefaut(),
     contrats: [
       {

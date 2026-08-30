@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { FournisseurStore, useStore } from './store/AppStore'
 import { FournisseurConfirmation } from './components/Confirmation'
 import { FournisseurSynchro } from './store/SynchroContexte'
+import { useTheme } from './store/theme'
 import { PageJour } from './pages/PageJour'
 import { PageMois } from './pages/PageMois'
 import { PageContrats } from './pages/PageContrats'
@@ -46,6 +47,7 @@ export default function App() {
 function Coquille() {
   const s = useStore()
   const [onglet, setOnglet] = useState<Onglet>('jour')
+  useTheme(s.donnees.reglages.theme)
 
   if (!s.pret) return <div className="vide">Chargement…</div>
 

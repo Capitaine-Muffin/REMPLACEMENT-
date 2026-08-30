@@ -1,13 +1,16 @@
 /**
  * Modèle de données de l'application.
  *
- * Principe RGPD : on ne stocke AUCUNE donnee de santé ni identité patiente.
+ * Principe RGPD : on ne stocke AUCUNE donnée de santé ni identité patiente.
  * Une journée de travail = un nombre d'actes + leurs cotations + les indemnités.
- * Le champ libre "notes" est destiné à l'organisation (ex : "cabinet fermé
- * l'après-midi"), jamais à une information nominative ou médicale.
+ *
+ * Le champ libre "notes" ne fait pas exception : il est réservé à
+ * l'organisation (ex : "cabinet fermé l'après-midi"). Y inscrire une donnée
+ * médicale ou identifiante est interdit, et l'anonymisation incombe au
+ * professionnel de santé qui renseigne l'application.
  */
 
-/** Nature d'une ligne de la feuille journaliere. */
+/** Nature d'une ligne de la feuille journalière. */
 export type Categorie = 'acte' | 'majoration' | 'id' | 'ik'
 
 export const CATEGORIES: { value: Categorie; label: string; court: string }[] = [
@@ -66,11 +69,11 @@ export interface ActeCatalogue {
   coefficient?: number
   /** Montant fixe. Utilisé uniquement quand tarification vaut 'forfait'. */
   tarif: number
-  /** Unité de la quantite : un acte, ou un kilometre pour les IK. */
+  /** Unité de la quantité : un acte, ou un kilomètre pour les IK. */
   unite: 'acte' | 'km'
   favori: boolean
   archive: boolean
-  /** true si l'acte à ete crée par l'utilisatrice (pas un defaut fourni). */
+  /** true si l'acte a été créé par l'utilisatrice (et non fourni par l'application). */
   personnalise: boolean
   /**
    * false tant que le montant n'a pas été confirmé par une sage-femme.
@@ -109,7 +112,7 @@ export interface Contrat {
   notes?: string
 }
 
-/** Une ligne saisie sur une feuille journaliere. */
+/** Une ligne saisie sur une feuille journalière. */
 export interface Ligne {
   id: string
   /** Référence au catalogue quand la ligne en vient (sinon saisie libre). */
@@ -126,7 +129,7 @@ export interface Ligne {
   tarifUnitaire: number
 }
 
-/** Une feuille journaliere, pour une date et un contrat donnes. */
+/** Une feuille journalière, pour une date et un contrat donnés. */
 export interface Journee {
   id: string
   /** Format ISO court : YYYY-MM-DD. */
@@ -137,12 +140,23 @@ export interface Journee {
   updatedAt: string
 }
 
-/** Réglages generaux. */
+/**
+ * Apparence choisie. « systeme » suit le réglage du téléphone ; les deux autres
+ * l'emportent dessus.
+ */
+export type Theme = 'clair' | 'sombre' | 'systeme'
+
+export const THEMES: { value: Theme; libelle: string }[] = [
+  { value: 'clair', libelle: 'Clair' },
+  { value: 'sombre', libelle: 'Sombre' },
+  { value: 'systeme', libelle: 'Comme le téléphone' },
+]
+
+/** Réglages généraux. */
 export interface Reglages {
   prenom: string
-  /** Contrat présélectionné à l'ouverture d'une nouvelle journée. */
-  contratParDefautId?: string
-  /** Provision mise de cote pour les cotisations et l'impôt, en fraction. */
+  theme: Theme
+  /** Provision mise de côté pour les cotisations et l'impôt, en fraction. */
   tauxProvision: number
   afficherProvision: boolean
 }
