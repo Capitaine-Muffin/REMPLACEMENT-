@@ -124,15 +124,22 @@ export function PageJour() {
 
           {contratsActifs.length > 1 && (
             <div className="puces" role="group" aria-label="Contrat">
-              {contratsActifs.map((c) => (
-                <button
-                  key={c.id} type="button" className="puce"
-                  aria-pressed={c.id === contrat.id}
-                  onClick={() => setContratId(c.id)}
-                >
-                  {c.nom}
-                </button>
-              ))}
+              {contratsActifs.map((c) => {
+                // Le montant déjà noté pour ce contrat ce jour-là : sans lui, on
+                // croit sa journée vide alors qu'elle est saisie sur l'autre.
+                const sienne = s.journee(date, c.id)
+                const total = sienne ? calculerLignes(sienne.lignes, c).brut : 0
+                return (
+                  <button
+                    key={c.id} type="button" className="puce"
+                    aria-pressed={c.id === contrat.id}
+                    onClick={() => setContratId(c.id)}
+                  >
+                    {c.nom}
+                    {total > 0 && <span className="puce-montant">{euros(total)}</span>}
+                  </button>
+                )
+              })}
             </div>
           )}
         </div>

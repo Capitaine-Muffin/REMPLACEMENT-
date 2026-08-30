@@ -362,6 +362,8 @@ button.ligne:hover { background: var(--surface-2); }
   font-size: .8rem; font-weight: 600; cursor: pointer; color: var(--texte-doux);
 }
 .puce[aria-pressed='true'] { background: var(--accent); border-color: var(--accent); color: var(--sur-accent); }
+/* Montant déjà saisi, rappelé sur la pastille du contrat concerné. */
+.puce-montant { margin-left: 6px; opacity: .75; font-weight: 700; }
 
 dialog {
   width: min(560px, 100vw - 24px);

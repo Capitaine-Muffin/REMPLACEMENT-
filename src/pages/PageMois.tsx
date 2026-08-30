@@ -19,6 +19,9 @@ export function PageMois() {
   const journees = s.journeesDuMois(mois)
   const contrats = s.donnees.contrats
   const vide = journees.length === 0
+  // Une même date travaillée pour deux contrats fait deux feuilles, mais une
+  // seule journée de travail.
+  const joursTravailles = new Set(journees.map((j) => j.date)).size
 
   const ventilation = useMemo(() => ventilerParContrat(journees, contrats), [journees, contrats])
   const global = useMemo(() => calculerPeriode(journees, contrats), [journees, contrats])
@@ -89,7 +92,7 @@ export function PageMois() {
           <div className="vignettes">
             <div className="vignette">
               <div className="cle">Jours</div>
-              <div className="val">{journees.length}</div>
+              <div className="val">{joursTravailles}</div>
             </div>
             <div className="vignette">
               <div className="cle">Actes</div>
