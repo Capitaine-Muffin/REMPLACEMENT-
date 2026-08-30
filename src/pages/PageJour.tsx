@@ -155,7 +155,15 @@ export function PageJour() {
               {/* Hors de la rangée qui défile : le total de la date, tous
                   contrats confondus, doit rester visible en permanence. */}
               {totalDuJour > 0 && (
-                <span className="puce puce-lecture">Total {euros(totalDuJour)}</span>
+                <span
+                  className="puce puce-lecture"
+                  title="Total de la journée, tous contrats confondus"
+                >
+                  {/* Le sigma tient en un caractère ; le mot reste lisible par
+                      les lecteurs d'écran, pour qui « Σ » ne veut rien dire. */}
+                  <span className="sr">Total de la journée : </span>
+                  <span aria-hidden="true">Σ</span> {euros(totalDuJour)}
+                </span>
               )}
             </div>
           )}
