@@ -16,12 +16,12 @@ export function PageTarifs() {
   const [recherche, setRecherche] = useState('')
   const [voirArchives, setVoirArchives] = useState(false)
 
-  const nbAVerifier = s.donnees.catalogue.filter((a) => !a.archive && aVerifier(a.note)).length
+  const nbAVerifier = s.donnees.catalogue.filter((a) => !a.archive && aVerifier(a)).length
   const q = recherche.trim().toLowerCase()
   const actes = s.donnees.catalogue
     .filter((a) => voirArchives || !a.archive)
     .filter((a) =>
-      q ? true : categorie === 'verifier' ? aVerifier(a.note) : a.categorie === categorie,
+      q ? true : categorie === 'verifier' ? aVerifier(a) : a.categorie === categorie,
     )
     .filter((a) => !q || a.libelle.toLowerCase().includes(q) || a.code.toLowerCase().includes(q))
 
@@ -245,10 +245,10 @@ function FicheActe({ acte }: { acte: ActeCatalogue }) {
           <div className="meta">
             {cotation(acte, lettres) || 'sans cotation'}
             {acte.archive && ' · archivé'}
-            {acte.note && !aVerifier(acte.note) && ` · ${acte.note}`}
+            {acte.note && !aVerifier(acte) && ` · ${acte.note}`}
           </div>
         </button>
-        {aVerifier(acte.note) && (
+        {aVerifier(acte) && (
           <span className="etiquette alerte" title={acte.note}>à vérifier</span>
         )}
         <span className="montant">
@@ -259,14 +259,29 @@ function FicheActe({ acte }: { acte: ActeCatalogue }) {
 
       {deplie && (
         <div className="carte-corps" style={{ background: 'var(--surface-2)' }}>
-          {aVerifier(acte.note) && (
-            <div className="note">
-              <IconeAlerte />
-              <span>
-                {acte.note}. Ce montant vient de mes recherches, pas de toi.
-                Corrige-le et la mention disparaîtra.
+          {aVerifier(acte) ? (
+            <div className="note" style={{ display: 'grid', gap: 8 }}>
+              <span style={{ display: 'flex', gap: 9 }}>
+                <IconeAlerte />
+                <span>
+                  <strong>D'où vient ce montant :</strong> {acte.source ?? 'origine inconnue'}.
+                  Personne ne l'a confirmé.
+                </span>
               </span>
+              <button
+                type="button" className="btn petit"
+                style={{ justifySelf: 'start' }}
+                onClick={() => maj({ verifie: true, source: 'Confirmé par toi' })}
+              >
+                Ce montant est bon, je confirme
+              </button>
             </div>
+          ) : (
+            acte.source && (
+              <p style={{ margin: 0, fontSize: '.76rem', color: 'var(--texte-faible)' }}>
+                {acte.source}
+              </p>
+            )
           )}
 
           <label>
@@ -322,7 +337,13 @@ function FicheActe({ acte }: { acte: ActeCatalogue }) {
                   <input
                     type="number" inputMode="decimal" min={0} step={0.5}
                     value={acte.coefficient ?? 0}
-                    onChange={(e) => maj({ coefficient: versNombre(e.target.value) })}
+                    onChange={(e) =>
+                      maj({
+                        coefficient: versNombre(e.target.value),
+                        verifie: true,
+                        source: 'Confirmé par toi',
+                      })
+                    }
                   />
                 </label>
               </div>
@@ -345,7 +366,12 @@ function FicheActe({ acte }: { acte: ActeCatalogue }) {
                   type="number" inputMode="decimal" min={0} step={0.05}
                   value={acte.tarif}
                   onChange={(e) =>
-                    maj({ tarif: versNombre(e.target.value), note: undefined })
+                    // Corriger un montant, c'est le valider.
+                    maj({
+                      tarif: versNombre(e.target.value),
+                      verifie: true,
+                      source: 'Confirmé par toi',
+                    })
                   }
                 />
               </label>

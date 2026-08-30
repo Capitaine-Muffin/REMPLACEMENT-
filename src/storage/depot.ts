@@ -74,7 +74,12 @@ function migrerCatalogue(d: Partial<DonneesApp>, base: DonneesApp): ActeCatalogu
 
   const personnalises = d.catalogue
     .filter((a) => a.personnalise && !estFourni(a.id))
-    .map<ActeCatalogue>((a) => ({ ...a, tarification: a.tarification ?? 'forfait' }))
+    .map<ActeCatalogue>((a) => ({
+      ...a,
+      tarification: a.tarification ?? 'forfait',
+      verifie: a.verifie ?? true,
+      source: a.source ?? 'Saisi par toi',
+    }))
 
   return [...base.catalogue, ...personnalises]
 }

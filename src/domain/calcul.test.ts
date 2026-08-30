@@ -146,12 +146,13 @@ describe('tarification à la lettre clé', () => {
     id: 'a1', code: 'SF', libelle: 'Rééducation périnéale', categorie: 'acte',
     tarification: 'coefficient', lettreCleId: 'sf', coefficient: 7.5,
     tarif: 0, unite: 'acte', favori: false, archive: false, personnalise: false,
+    verifie: true,
   }
 
   const acteForfait: ActeCatalogue = {
     id: 'a2', code: 'IFD', libelle: 'Indemnité de déplacement', categorie: 'id',
     tarification: 'forfait', tarif: 2.75,
-    unite: 'acte', favori: false, archive: false, personnalise: false,
+    unite: 'acte', favori: false, archive: false, personnalise: false, verifie: true,
   }
 
   it('multiplie la lettre clé par le coefficient', () => {

@@ -76,9 +76,17 @@ jamais le passé.
 Certains montants ne suivent pas de coefficient (consultation, majorations,
 IFD, IK) : ceux-là sont saisis en montant fixe, et se modifient directement.
 
-## Ce qui est confirmé, et ce qui ne l'est pas
+## Chaque montant porte son origine
 
-Le catalogue livré distingue deux choses, et l'appli le montre.
+Aucun chiffre n'entre dans le catalogue sans sa provenance : elle est stockée
+avec l'acte (`source`) et affichée dans l'appli. Rien n'est déduit, arrondi ni
+reconstitué — soit un montant vient d'une sage-femme, soit d'une source citée,
+soit il n'y est pas.
+
+Un acte non confirmé porte une pastille **« à vérifier »**. En l'ouvrant, tu
+lis d'où vient le montant, et deux gestes suffisent : corriger la valeur, ou
+appuyer sur « Ce montant est bon, je confirme » si elle est juste. Dans les
+deux cas la pastille disparaît et la source devient « Confirmé par toi ».
 
 **Confirmé par une sage-femme en exercice** — affiché sans mention :
 

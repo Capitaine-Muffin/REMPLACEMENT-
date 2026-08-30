@@ -399,7 +399,7 @@ function ChoixActe({
                   {cotation(a, lettres)} · {CATEGORIES.find((c) => c.value === a.categorie)?.court}
                 </div>
               </div>
-              {aVerifier(a.note) && <span className="etiquette alerte">à vérifier</span>}
+              {aVerifier(a) && <span className="etiquette alerte">à vérifier</span>}
               <span className="montant">
                 {euros(tarifCatalogue(a, lettres))}
                 {a.unite === 'km' && <span style={{ fontWeight: 500 }}> /km</span>}

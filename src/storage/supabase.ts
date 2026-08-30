@@ -145,6 +145,8 @@ const versActe = (r: Rang): ActeCatalogue => ({
   favori: r.favori,
   archive: r.archive,
   personnalise: r.personnalise,
+  verifie: r.verifie ?? false,
+  source: r.source ?? undefined,
   note: r.note ?? undefined,
 })
 
@@ -161,6 +163,8 @@ const depuisActe = (a: ActeCatalogue) => ({
   favori: a.favori,
   archive: a.archive,
   personnalise: a.personnalise,
+  verifie: a.verifie,
+  source: a.source ?? null,
   note: a.note ?? null,
 })
 

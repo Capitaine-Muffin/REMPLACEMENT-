@@ -191,6 +191,10 @@ export function FournisseurStore({
           favori: false,
           archive: false,
           personnalise: true,
+          // Ce que l'utilisatrice saisit elle-même n'a personne d'autre à
+          // qui être confirmé.
+          verifie: true,
+          source: 'Saisi par toi',
           ...a,
         }
         modifier((d) => ({ ...d, catalogue: [...d.catalogue, acte] }))

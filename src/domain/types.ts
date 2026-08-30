@@ -54,6 +54,14 @@ export interface ActeCatalogue {
   archive: boolean
   /** true si l'acte à ete crée par l'utilisatrice (pas un defaut fourni). */
   personnalise: boolean
+  /**
+   * false tant que le montant n'a pas été confirmé par une sage-femme.
+   * L'application le signale partout : un chiffre trouvé sur internet ne doit
+   * jamais avoir l'air d'un chiffre validé.
+   */
+  verifie: boolean
+  /** D'où vient ce montant, en clair. Affiché avec l'acte. */
+  source?: string
   note?: string
 }
 
@@ -131,4 +139,4 @@ export interface DonneesApp {
   journees: Journee[]
 }
 
-export const VERSION_DONNEES = 4
+export const VERSION_DONNEES = 5
