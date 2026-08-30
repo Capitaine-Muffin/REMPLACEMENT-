@@ -8,6 +8,7 @@ import { nomFerie } from '../domain/feries'
 import type { ActeCatalogue, Categorie, Ligne } from '../domain/types'
 import { CATEGORIES } from '../domain/types'
 import { DetailTotaux } from '../components/Totaux'
+import { useConfirmation } from '../components/Confirmation'
 import { Modale } from '../components/Modale'
 import {
   IconeAlerte, IconeCopie, IconeCorbeille, IconeDroite, IconeGauche, IconePlus,
@@ -15,6 +16,7 @@ import {
 
 export function PageJour() {
   const s = useStore()
+  const demanderConfirmation = useConfirmation()
   const [date, setDate] = useState(aujourdhui)
   const contratsActifs = s.donnees.contrats.filter((c) => c.actif)
   const [contratId, setContratId] = useState(
@@ -190,8 +192,12 @@ export function PageJour() {
               </button>
               <button
                 type="button" className="btn petit danger"
-                onClick={() => {
-                  if (confirm('Supprimer toute la journée ?')) s.supprimerJournee(journee.id)
+                onClick={async () => {
+                  const ok = await demanderConfirmation(
+                    'Toutes les lignes de cette journée seront effacées.',
+                    { titre: 'Vider la journée ?', confirmer: 'Vider' },
+                  )
+                  if (ok) s.supprimerJournee(journee.id)
                 }}
               >
                 <IconeCorbeille /> Vider la journée

@@ -10,6 +10,8 @@
   --accent-fort: #115e59;
   --accent-doux: #ccfbf1;
   --accent-texte: #0f766e;
+  /* Texte pose sur un aplat d'accent. */
+  --sur-accent: #ffffff;
 
   --fond: #f6f7f8;
   --surface: #ffffff;
@@ -32,12 +34,17 @@
   --barre-h: 62px;
 }
 
+/* Palette sombre.
+   Les deux blocs ci-dessous sont volontairement identiques : le premier suit
+   le reglage du systeme, le second un theme impose sur l'element racine (et
+   qui doit donc l'emporter sur le systeme). Toujours les modifier ensemble. */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme='light']) {
     --accent: #2dd4bf;
     --accent-fort: #5eead4;
     --accent-doux: #134e4a;
     --accent-texte: #5eead4;
+    --sur-accent: #04211d;
 
     --fond: #0d1117;
     --surface: #161b22;
@@ -56,6 +63,31 @@
 
     --ombre: 0 1px 2px rgba(0, 0, 0, .4);
   }
+}
+
+:root[data-theme='dark'] {
+  --accent: #2dd4bf;
+  --accent-fort: #5eead4;
+  --accent-doux: #134e4a;
+  --accent-texte: #5eead4;
+  --sur-accent: #04211d;
+
+  --fond: #0d1117;
+  --surface: #161b22;
+  --surface-2: #1f2630;
+  --bordure: #2b333d;
+  --bordure-forte: #3d4753;
+
+  --texte: #e7edf3;
+  --texte-doux: #a4b0bd;
+  --texte-faible: #78838f;
+
+  --positif: #4ade80;
+  --negatif: #fb7185;
+  --alerte: #fbbf24;
+  --alerte-fond: #3b2f0f;
+
+  --ombre: 0 1px 2px rgba(0, 0, 0, .4);
 }
 
 * { box-sizing: border-box; }
@@ -188,7 +220,7 @@ input[type='number'] { text-align: right; font-variant-numeric: tabular-nums; }
 }
 .btn:hover { border-color: var(--texte-faible); }
 .btn:active { transform: translateY(1px); }
-.btn.principal { background: var(--accent); border-color: var(--accent); color: #fff; }
+.btn.principal { background: var(--accent); border-color: var(--accent); color: var(--sur-accent); }
 .btn.principal:hover { background: var(--accent-fort); }
 .btn.danger { color: var(--negatif); border-color: var(--negatif); background: transparent; }
 .btn.discret { border-color: transparent; background: transparent; color: var(--texte-doux); }
@@ -289,7 +321,7 @@ button.ligne:hover { background: var(--surface-2); }
   border-radius: 999px;
   font-size: .8rem; font-weight: 600; cursor: pointer; color: var(--texte-doux);
 }
-.puce[aria-pressed='true'] { background: var(--accent); border-color: var(--accent); color: #fff; }
+.puce[aria-pressed='true'] { background: var(--accent); border-color: var(--accent); color: var(--sur-accent); }
 
 dialog {
   width: min(560px, 100vw - 24px);

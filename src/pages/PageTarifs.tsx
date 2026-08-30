@@ -5,6 +5,7 @@ import { AVERTISSEMENT_TARIFS } from '../domain/catalogue'
 import type { ActeCatalogue, Categorie } from '../domain/types'
 import { CATEGORIES } from '../domain/types'
 import { IconeAlerte, IconeCorbeille, IconeEtoile, IconePlus } from '../components/Icones'
+import { useConfirmation } from '../components/Confirmation'
 
 export function PageTarifs() {
   const s = useStore()
@@ -75,6 +76,7 @@ export function PageTarifs() {
 
 function FicheActe({ acte }: { acte: ActeCatalogue }) {
   const s = useStore()
+  const demanderConfirmation = useConfirmation()
   const [deplie, setDeplie] = useState(false)
   const maj = (a: Partial<ActeCatalogue>) => s.majActe(acte.id, a)
   const utilise = s.donnees.journees.some((j) => j.lignes.some((l) => l.acteId === acte.id))
@@ -154,11 +156,14 @@ function FicheActe({ acte }: { acte: ActeCatalogue }) {
             </button>
             <button
               type="button" className="btn petit danger"
-              onClick={() => {
-                const message = utilise
-                  ? 'Cet acte est utilisé dans des journées déjà saisies. Les montants déjà notés seront conservés. Le supprimer du catalogue ?'
-                  : 'Supprimer cet acte du catalogue ?'
-                if (confirm(message)) s.supprimerActe(acte.id)
+              onClick={async () => {
+                const ok = await demanderConfirmation(
+                  utilise
+                    ? 'Cet acte est utilisé dans des journées déjà saisies. Les montants déjà notés seront conservés : seul le catalogue change.'
+                    : 'Cet acte sera retiré de ton catalogue.',
+                  { titre: `Supprimer « ${acte.libelle || acte.code} » ?`, confirmer: 'Supprimer' },
+                )
+                if (ok) s.supprimerActe(acte.id)
               }}
             >
               <IconeCorbeille /> Supprimer

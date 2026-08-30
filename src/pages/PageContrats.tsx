@@ -5,6 +5,7 @@ import { tarifApplique } from '../domain/calcul'
 import type { Contrat } from '../domain/types'
 import { CATEGORIES } from '../domain/types'
 import { Modale } from '../components/Modale'
+import { useConfirmation } from '../components/Confirmation'
 import { IconeCorbeille, IconeInfo, IconePlus } from '../components/Icones'
 
 export function PageContrats() {
@@ -48,6 +49,7 @@ function FicheContrat({
   onBasculer: () => void
 }) {
   const s = useStore()
+  const demanderConfirmation = useConfirmation()
   const [tarifsOuverts, setTarifsOuverts] = useState(false)
   const maj = (c: Partial<Contrat>) => s.majContrat(contrat.id, c)
   const nbJournees = s.donnees.journees.filter((j) => j.contratId === contrat.id).length
@@ -190,11 +192,14 @@ function FicheContrat({
           <div className="actions fin">
             <button
               type="button" className="btn danger petit"
-              onClick={() => {
-                const message = nbJournees
-                  ? `Supprimer « ${contrat.nom} » et ses ${nbJournees} journee(s) enregistree(s) ? Cette action est definitive.`
-                  : `Supprimer « ${contrat.nom} » ?`
-                if (confirm(message)) s.supprimerContrat(contrat.id)
+              onClick={async () => {
+                const ok = await demanderConfirmation(
+                  nbJournees
+                    ? `Les ${nbJournees} journée(s) déjà saisies pour ce contrat seront effacées elles aussi. C'est définitif.`
+                    : 'Ce contrat sera effacé.',
+                  { titre: `Supprimer « ${contrat.nom} » ?`, confirmer: 'Supprimer' },
+                )
+                if (ok) s.supprimerContrat(contrat.id)
               }}
             >
               <IconeCorbeille /> Supprimer

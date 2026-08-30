@@ -8,11 +8,13 @@ import { nomFerie } from '../domain/feries'
 import { DetailTotaux } from '../components/Totaux'
 import { exporterMoisCSV, resumePourTitulaire } from '../export/fichiers'
 import { IconeDroite, IconeExport, IconeGauche, IconeImprimer } from '../components/Icones'
+import { Modale } from '../components/Modale'
 
 export function PageMois() {
   const s = useStore()
   const [mois, setMois] = useState(moisActuel)
   const [copie, setCopie] = useState<string | null>(null)
+  const [aCopierAlaMain, setACopierAlaMain] = useState<string | null>(null)
 
   const journees = s.journeesDuMois(mois)
   const contrats = s.donnees.contrats
@@ -35,8 +37,9 @@ export function PageMois() {
       setCopie(cle)
       setTimeout(() => setCopie(null), 2000)
     } catch {
-      // Presse-papier refusé (http, permission) : on laisse la sélection manuelle.
-      alert(texte)
+      // Presse-papier refusé (connexion non sécurisée, permission) : on affiche
+      // le texte pour qu'il puisse être selectionné à la main.
+      setACopierAlaMain(texte)
     }
   }
 
@@ -201,6 +204,23 @@ export function PageMois() {
           </div>
         </>
       )}
+
+      <Modale
+        titre="Récapitulatif à copier"
+        ouverte={aCopierAlaMain !== null}
+        onFermer={() => setACopierAlaMain(null)}
+      >
+        <p style={{ fontSize: '.85rem', color: 'var(--texte-doux)', margin: 0 }}>
+          La copie automatique n'est pas autorisée ici. Sélectionne le texte
+          ci-dessous et copie-le à la main.
+        </p>
+        <textarea
+          readOnly
+          value={aCopierAlaMain ?? ''}
+          rows={8}
+          onFocus={(e) => e.currentTarget.select()}
+        />
+      </Modale>
 
       <div className="carte">
         <header><h2>Depuis le 1er janvier {annee}</h2></header>

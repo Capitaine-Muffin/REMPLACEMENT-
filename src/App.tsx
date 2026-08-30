@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { FournisseurStore, useStore } from './store/AppStore'
+import { FournisseurConfirmation } from './components/Confirmation'
 import { PageJour } from './pages/PageJour'
 import { PageMois } from './pages/PageMois'
 import { PageContrats } from './pages/PageContrats'
@@ -32,7 +33,9 @@ const TITRES: Record<Onglet, string> = {
 export default function App() {
   return (
     <FournisseurStore>
-      <Coquille />
+      <FournisseurConfirmation>
+        <Coquille />
+      </FournisseurConfirmation>
     </FournisseurStore>
   )
 }

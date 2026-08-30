@@ -4,9 +4,11 @@ import { versNombre } from '../domain/format'
 import { exporterSauvegarde, lireSauvegarde } from '../export/fichiers'
 import { supabaseActif } from '../storage/supabase'
 import { IconeExport, IconeInfo } from '../components/Icones'
+import { useConfirmation } from '../components/Confirmation'
 
 export function PageReglages() {
   const s = useStore()
+  const demanderConfirmation = useConfirmation()
   const r = s.donnees.reglages
   const fichier = useRef<HTMLInputElement>(null)
   const [message, setMessage] = useState<string | null>(null)
@@ -14,7 +16,11 @@ export function PageReglages() {
   const importer = async (f: File) => {
     try {
       const brut = await lireSauvegarde(f)
-      if (!confirm('Remplacer toutes les données actuelles par cette sauvegarde ?')) return
+      const ok = await demanderConfirmation(
+        'Tes données actuelles seront remplacées par le contenu de ce fichier.',
+        { titre: 'Restaurer cette sauvegarde ?', confirmer: 'Restaurer' },
+      )
+      if (!ok) return
       s.remplacerDonnees(brut)
       setMessage('Sauvegarde restaurée.')
     } catch {
@@ -118,8 +124,12 @@ export function PageReglages() {
           <div className="actions fin">
             <button
               type="button" className="btn danger petit"
-              onClick={() => {
-                if (confirm('Effacer toutes tes données et repartir de zéro ? Cette action est définitive.')) {
+              onClick={async () => {
+                const ok = await demanderConfirmation(
+                  'Toutes tes journées, tes contrats et tes tarifs seront effacés. C\'est définitif.',
+                  { titre: 'Tout effacer ?', confirmer: 'Tout effacer' },
+                )
+                if (ok) {
                   s.reinitialiser()
                   setMessage('Application réinitialisée.')
                 }
