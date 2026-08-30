@@ -1,70 +1,146 @@
-import type { ActeCatalogue } from './types'
+import type { ActeCatalogue, LettreCle } from './types'
 
 /**
- * ATTENTION — Les tarifs ci-dessous sont des valeurs de DEPART indicatives,
- * destinées à eviter une saisie initiale fastidieuse. Les valeurs
- * conventionnelles (lettre cle SF, majorations, IFD, IK) evoluent avec les
- * avenants à la convention nationale : vérifie chaque montant avec la NGAP en
- * vigueur avant de facturer, et corrige-les dans l'écran "Tarifs".
+ * Valeurs de départ, relevées en août 2026 auprès des sources ci-dessous.
  *
- * Tout est modifiable : montant, Libellé, code, et ajout de tes propres actes
- * ou de tes dépassements d'honoraires.
+ * - Lettres clés SF et SP portées à 3,20 € au 1er janvier 2025 (avenant 7 à la
+ *   convention nationale des sages-femmes) — UNSSF.
+ * - Majoration sage-femme MSF 3,50 €, consultation à 26,50 €, majoration de
+ *   déplacement dimanche et jours fériés MDD 22,60 €, IK plaine 0,61 €,
+ *   IK montagne 0,91 € — ameli.fr, avenant 7.
+ * - Majorations d'urgence : 35 € (20 h - 0 h et 6 h - 8 h), 40 € (0 h - 6 h).
+ * - Indemnité forfaitaire de déplacement : 2,75 €.
+ *
+ * TOUT reste modifiable, et surtout : les actes cotés au coefficient (SF 7,5,
+ * SF 12...) se recalculent seuls dès que la valeur de la lettre clé change.
+ * C'est le seul chiffre à corriger lors d'une revalorisation.
+ *
+ * Ces valeurs restent à vérifier avec la NGAP en vigueur avant de facturer.
  */
 export const AVERTISSEMENT_TARIFS =
-  "Tarifs de départ indicatifs : vérifie-les avec la NGAP en vigueur et ajuste-les dans l'écran Tarifs."
+  'Valeurs relevées en août 2026 : vérifie-les avec la NGAP en vigueur, ' +
+  'puis ajuste ce qu\'il faut ici.'
+
+export const LETTRE_SF = 'lc-sf'
+export const LETTRE_SP = 'lc-sp'
+
+/** Lettres clés livrées par défaut. */
+export function lettresClesParDefaut(): LettreCle[] {
+  return [
+    {
+      id: LETTRE_SF,
+      code: 'SF',
+      libelle: 'Actes obstétricaux de la sage-femme',
+      valeur: 3.2,
+    },
+    {
+      id: LETTRE_SP,
+      code: 'SP',
+      libelle: 'Actes de prévention et séances en groupe',
+      valeur: 3.2,
+    },
+  ]
+}
 
 interface Defaut {
   code: string
   libelle: string
   categorie: ActeCatalogue['categorie']
-  tarif: number
+  /** Cotation au coefficient : [lettre clé, coefficient]. */
+  cotation?: [string, number]
+  /** Montant fixe, pour ce qui n'est pas coté au coefficient. */
+  forfait?: number
   unite?: 'acte' | 'km'
   favori?: boolean
   note?: string
 }
 
 const DEFAUTS: Defaut[] = [
-  // --- Consultations et actes cotés ---
-  { code: 'C', libelle: 'Consultation sage-femme', categorie: 'acte', tarif: 25, favori: true },
-  { code: 'C', libelle: 'Consultation de suivi gynécologique de prévention', categorie: 'acte', tarif: 25 },
-  { code: 'SF12', libelle: 'Séance de préparation à la naissance (individuelle)', categorie: 'acte', tarif: 48.6, favori: true },
-  { code: 'SF15', libelle: 'Rééducation périnéale', categorie: 'acte', tarif: 60.75, favori: true },
-  { code: 'SF15', libelle: 'Entretien prénatal précoce', categorie: 'acte', tarif: 60.75 },
-  { code: 'SF12', libelle: 'Visite à domicile post-natale', categorie: 'acte', tarif: 48.6, favori: true },
-  { code: 'SF15', libelle: 'Surveillance à domicile de grossesse pathologique', categorie: 'acte', tarif: 60.75 },
-  { code: 'SF9', libelle: 'Monitorage / enregistrement du rythme cardiaque fœtal', categorie: 'acte', tarif: 36.45 },
+  // --- Actes cotés au coefficient ---------------------------------------
+  {
+    code: 'SF', libelle: 'Rééducation périnéale', categorie: 'acte',
+    cotation: [LETTRE_SF, 7.5], favori: true,
+  },
+  {
+    code: 'SF', libelle: 'Séance de préparation à la naissance (individuelle)',
+    categorie: 'acte', cotation: [LETTRE_SF, 12], favori: true,
+  },
+  {
+    code: 'SP', libelle: 'Séance postnatale en groupe (4 à 6 personnes)',
+    categorie: 'acte', cotation: [LETTRE_SP, 6],
+  },
+  {
+    code: 'SF', libelle: 'Surveillance à domicile mère et enfant — 1er forfait',
+    categorie: 'acte', cotation: [LETTRE_SF, 23],
+    note: 'Deux premiers forfaits journaliers, J0 à J12',
+  },
+  {
+    code: 'SF', libelle: 'Surveillance à domicile mère et enfant — forfait suivant',
+    categorie: 'acte', cotation: [LETTRE_SF, 17],
+  },
+  {
+    code: 'SF', libelle: 'Surveillance à domicile mère seule — 1er forfait',
+    categorie: 'acte', cotation: [LETTRE_SF, 16.5],
+  },
+  {
+    code: 'SF', libelle: 'Surveillance à domicile mère seule — forfait suivant',
+    categorie: 'acte', cotation: [LETTRE_SF, 12],
+  },
 
-  // --- Lettres cles brutes, pour coter librement ---
-  { code: 'SF6', libelle: 'SF 6', categorie: 'acte', tarif: 24.3, note: 'Lettre clé brute' },
-  { code: 'SF7', libelle: 'SF 7', categorie: 'acte', tarif: 28.35, note: 'Lettre clé brute' },
-  { code: 'SF9', libelle: 'SF 9', categorie: 'acte', tarif: 36.45, note: 'Lettre clé brute' },
-  { code: 'SF12', libelle: 'SF 12', categorie: 'acte', tarif: 48.6, note: 'Lettre clé brute' },
-  { code: 'SF15', libelle: 'SF 15', categorie: 'acte', tarif: 60.75, note: 'Lettre clé brute' },
-  { code: 'SF20', libelle: 'SF 20', categorie: 'acte', tarif: 81, note: 'Lettre clé brute' },
-  { code: 'SF25', libelle: 'SF 25', categorie: 'acte', tarif: 101.25, note: 'Lettre clé brute' },
+  // Cotations nues, pour coter librement ce qui n'est pas dans la liste.
+  { code: 'SF', libelle: 'SF au coefficient libre', categorie: 'acte', cotation: [LETTRE_SF, 1], note: 'Mets le coefficient que tu veux' },
+  { code: 'SP', libelle: 'SP au coefficient libre', categorie: 'acte', cotation: [LETTRE_SP, 1], note: 'Mets le coefficient que tu veux' },
 
-  // --- Majorations ---
-  { code: 'MD', libelle: 'Majoration dimanche et jour férié', categorie: 'majoration', tarif: 19.06, favori: true },
-  { code: 'MN', libelle: 'Majoration de nuit (20h - 8h)', categorie: 'majoration', tarif: 35, favori: true },
-  { code: 'MU', libelle: "Majoration d'urgence", categorie: 'majoration', tarif: 0, note: 'À renseigner selon ton contrat' },
+  // --- Actes à montant fixe ---------------------------------------------
+  {
+    code: 'C', libelle: 'Consultation (majoration MSF comprise)', categorie: 'acte',
+    forfait: 26.5, favori: true,
+  },
+  { code: 'MSF', libelle: 'Majoration sage-femme (MSF)', categorie: 'majoration', forfait: 3.5 },
 
-  // --- Indemnités de déplacement ---
-  { code: 'IFD', libelle: 'Indemnité forfaitaire de déplacement', categorie: 'id', tarif: 2.5, favori: true },
+  // --- Majorations -------------------------------------------------------
+  {
+    code: 'MDD', libelle: 'Majoration de déplacement dimanche et jour férié',
+    categorie: 'majoration', forfait: 22.6, favori: true,
+  },
+  {
+    code: 'N', libelle: "Majoration d'urgence de nuit (20 h - 0 h et 6 h - 8 h)",
+    categorie: 'majoration', forfait: 35, favori: true,
+  },
+  {
+    code: 'MM', libelle: "Majoration d'urgence de nuit (0 h - 6 h)",
+    categorie: 'majoration', forfait: 40,
+  },
 
-  // --- Indemnités kilométriques ---
-  { code: 'IK', libelle: 'IK plaine', categorie: 'ik', tarif: 0.35, unite: 'km', favori: true },
-  { code: 'IKM', libelle: 'IK montagne', categorie: 'ik', tarif: 0.5, unite: 'km' },
-  { code: 'IKP', libelle: 'IK à pied / à ski', categorie: 'ik', tarif: 3.4, unite: 'km' },
+  // --- Indemnités de déplacement -----------------------------------------
+  {
+    code: 'IFD', libelle: 'Indemnité forfaitaire de déplacement',
+    categorie: 'id', forfait: 2.75, favori: true,
+  },
+
+  // --- Indemnités kilométriques ------------------------------------------
+  {
+    code: 'IK', libelle: 'IK plaine', categorie: 'ik', forfait: 0.61,
+    unite: 'km', favori: true, note: 'Abattement de 4 km aller-retour',
+  },
+  {
+    code: 'IKM', libelle: 'IK montagne', categorie: 'ik', forfait: 0.91,
+    unite: 'km', note: 'Abattement de 2 km aller-retour',
+  },
+  { code: 'IKS', libelle: 'IK à pied ou à ski', categorie: 'ik', forfait: 4.5, unite: 'km' },
 ]
 
-/** Construit le catalogue livre par defaut à la première ouverture. */
+/** Construit le catalogue livré par défaut à la première ouverture. */
 export function catalogueParDefaut(): ActeCatalogue[] {
   return DEFAUTS.map((d, i) => ({
     id: `def-${i + 1}`,
     code: d.code,
     libelle: d.libelle,
     categorie: d.categorie,
-    tarif: d.tarif,
+    tarification: d.cotation ? 'coefficient' : 'forfait',
+    lettreCleId: d.cotation?.[0],
+    coefficient: d.cotation?.[1],
+    tarif: d.forfait ?? 0,
     unite: d.unite ?? 'acte',
     favori: d.favori ?? false,
     archive: false,

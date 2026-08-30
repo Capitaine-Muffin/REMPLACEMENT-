@@ -26,7 +26,7 @@ const enLigne = (cellules: (string | number)[]) => cellules.map(cellule).join(';
 export function exporterMoisCSV(mois: string, journees: Journee[], contrats: Contrat[]) {
   const parId = new Map(contrats.map((c) => [c.id, c]))
   const lignes: string[] = [
-    enLigne(['Date', 'Contrat', 'Code', 'Libellé', 'Catégorie', 'Quantité', 'Tarif unitaire', 'Montant']),
+    enLigne(['Date', 'Contrat', 'Cotation', 'Libellé', 'Catégorie', 'Quantité', 'Tarif unitaire', 'Montant']),
   ]
 
   const etiquettes: Record<string, string> = {

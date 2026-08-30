@@ -13,8 +13,23 @@ create extension if not exists "pgcrypto";
 -- Réglages generaux de l'utilisatrice ------------------------------------------
 create table if not exists public.profils (
   user_id    uuid primary key references auth.users (id) on delete cascade,
+  version    integer not null default 2,
   reglages   jsonb not null default '{}'::jsonb,
   updated_at timestamptz not null default now()
+);
+
+-- Lettres cles de la NGAP (SF, SP...) ------------------------------------------
+-- Leur valeur est fixee par la convention et change a chaque revalorisation :
+-- c'est le seul chiffre a mettre a jour pour que tous les actes cotes au
+-- coefficient suivent.
+create table if not exists public.lettres_cles (
+  id         text not null,
+  user_id    uuid not null references auth.users (id) on delete cascade,
+  code       text not null,
+  libelle    text not null default '',
+  valeur     numeric(10, 2) not null default 0,
+  updated_at timestamptz not null default now(),
+  primary key (user_id, id)
 );
 
 -- Contrats de remplacement -----------------------------------------------------
@@ -44,7 +59,19 @@ create table if not exists public.actes (
   code         text not null,
   libelle      text not null,
   categorie    text not null check (categorie in ('acte', 'majoration', 'id', 'ik')),
+  -- 'coefficient' : lettre cle x coefficient. 'forfait' : montant fixe.
+  tarification text not null default 'forfait'
+               check (tarification in ('coefficient', 'forfait')),
+  lettre_cle_id text,
+  coefficient   numeric(10, 3),
   tarif        numeric(10, 2) not null default 0,
+  -- Une cotation au coefficient doit designer une lettre cle, un forfait non.
+  constraint actes_cotation_coherente check (
+    (tarification = 'coefficient' and lettre_cle_id is not null and coefficient is not null)
+    or tarification = 'forfait'
+  ),
+  foreign key (user_id, lettre_cle_id)
+    references public.lettres_cles (user_id, id) on delete set null,
   unite        text not null default 'acte' check (unite in ('acte', 'km')),
   favori       boolean not null default false,
   archive      boolean not null default false,
@@ -80,7 +107,7 @@ alter table public.journees enable row level security;
 do $$
 declare t text;
 begin
-  foreach t in array array['profils', 'contrats', 'actes', 'journees'] loop
+  foreach t in array array['profils', 'lettres_cles', 'contrats', 'actes', 'journees'] loop
     execute format('drop policy if exists "acces proprietaire" on public.%I', t);
     execute format(
       'create policy "acces proprietaire" on public.%I
@@ -101,7 +128,7 @@ end $$;
 do $$
 declare t text;
 begin
-  foreach t in array array['profils', 'contrats', 'actes', 'journees'] loop
+  foreach t in array array['profils', 'lettres_cles', 'contrats', 'actes', 'journees'] loop
     execute format('drop trigger if exists touch_%1$s on public.%1$I', t);
     execute format(
       'create trigger touch_%1$s before insert or update on public.%1$I

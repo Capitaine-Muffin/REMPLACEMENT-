@@ -1,6 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
-import type { Contrat, DonneesApp, Journee, ActeCatalogue } from '../domain/types'
+import type { Contrat, DonneesApp, Journee, ActeCatalogue, LettreCle } from '../domain/types'
 import { migrer, type Depot } from './depot'
+import { VERSION_DONNEES } from '../domain/types'
 
 /**
  * Synchronisation multi-appareils (optionnelle).
@@ -37,19 +38,23 @@ export class DepotSupabase implements Depot {
   constructor(private readonly client: SupabaseClient, private readonly userId: string) {}
 
   async charger(): Promise<DonneesApp | null> {
-    const [profil, contrats, actes, journees] = await Promise.all([
+    const [profil, lettres, contrats, actes, journees] = await Promise.all([
       this.client.from('profils').select('*').eq('user_id', this.userId).maybeSingle(),
+      this.client.from('lettres_cles').select('*').eq('user_id', this.userId),
       this.client.from('contrats').select('*').eq('user_id', this.userId),
       this.client.from('actes').select('*').eq('user_id', this.userId),
       this.client.from('journees').select('*').eq('user_id', this.userId),
     ])
 
-    const erreur = profil.error ?? contrats.error ?? actes.error ?? journees.error
+    const erreur =
+      profil.error ?? lettres.error ?? contrats.error ?? actes.error ?? journees.error
     if (erreur) throw erreur
     if (!profil.data && !contrats.data?.length) return null
 
     return migrer({
+      version: profil.data?.version ?? VERSION_DONNEES,
       reglages: profil.data?.reglages,
+      lettresCles: (lettres.data ?? []).map(versLettre),
       contrats: (contrats.data ?? []).map(versContrat),
       catalogue: (actes.data ?? []).map(versActe),
       journees: (journees.data ?? []).map(versJournee),
@@ -59,13 +64,15 @@ export class DepotSupabase implements Depot {
   async sauvegarder(d: DonneesApp): Promise<void> {
     const u = this.userId
     const resultats = await Promise.all([
-      this.client.from('profils').upsert({ user_id: u, reglages: d.reglages }),
+      this.client.from('profils').upsert({ user_id: u, version: d.version, reglages: d.reglages }),
+      this.client.from('lettres_cles').upsert(d.lettresCles.map((l) => ({ ...depuisLettre(l), user_id: u }))),
       this.client.from('contrats').upsert(d.contrats.map((c) => ({ ...depuisContrat(c), user_id: u }))),
       this.client.from('actes').upsert(d.catalogue.map((a) => ({ ...depuisActe(a), user_id: u }))),
       this.client.from('journees').upsert(d.journees.map((j) => ({ ...depuisJournee(j), user_id: u }))),
     ])
     const erreur = resultats.find((r) => r.error)?.error
     if (erreur) throw erreur
+    await this.supprimerOrphelins('lettres_cles', d.lettresCles.map((l) => l.id))
     await this.supprimerOrphelins('contrats', d.contrats.map((c) => c.id))
     await this.supprimerOrphelins('actes', d.catalogue.map((a) => a.id))
     await this.supprimerOrphelins('journees', d.journees.map((j) => j.id))
@@ -111,11 +118,28 @@ const depuisContrat = (c: Contrat) => ({
   notes: c.notes ?? null,
 })
 
+const versLettre = (r: Rang): LettreCle => ({
+  id: r.id,
+  code: r.code,
+  libelle: r.libelle,
+  valeur: Number(r.valeur),
+})
+
+const depuisLettre = (l: LettreCle) => ({
+  id: l.id,
+  code: l.code,
+  libelle: l.libelle,
+  valeur: l.valeur,
+})
+
 const versActe = (r: Rang): ActeCatalogue => ({
   id: r.id,
   code: r.code,
   libelle: r.libelle,
   categorie: r.categorie,
+  tarification: r.tarification,
+  lettreCleId: r.lettre_cle_id ?? undefined,
+  coefficient: r.coefficient === null ? undefined : Number(r.coefficient),
   tarif: Number(r.tarif),
   unite: r.unite,
   favori: r.favori,
@@ -129,6 +153,9 @@ const depuisActe = (a: ActeCatalogue) => ({
   code: a.code,
   libelle: a.libelle,
   categorie: a.categorie,
+  tarification: a.tarification,
+  lettre_cle_id: a.lettreCleId ?? null,
+  coefficient: a.coefficient ?? null,
   tarif: a.tarif,
   unite: a.unite,
   favori: a.favori,

@@ -1,4 +1,4 @@
-import type { ActeCatalogue, Categorie, Contrat, Journee, Ligne } from './types'
+import type { ActeCatalogue, Categorie, Contrat, Journee, LettreCle, Ligne } from './types'
 
 /** Arrondi comptable au centime. */
 export function arrondi(n: number): number {
@@ -140,14 +140,48 @@ export function ventilerParContrat(
     .sort((a, b) => b.totaux.net - a.totaux.net)
 }
 
-/** Tarif appliqué pour un acte dans le cadre d'un contrat (dépassements inclus). */
-export function tarifApplique(acte: ActeCatalogue, contrat: Contrat | undefined): number {
-  const perso = contrat?.tarifs?.[acte.id]
-  return typeof perso === 'number' ? perso : acte.tarif
+/**
+ * Tarif d'un acte tel que le prévoit la nomenclature : pour une cotation au
+ * coefficient, la valeur de la lettre clé multipliée par le coefficient ; pour
+ * le reste, le montant fixe saisi.
+ *
+ * Une revalorisation de la lettre clé se répercute donc sur tous les actes
+ * cotés avec elle, sans rien ressaisir.
+ */
+export function tarifCatalogue(acte: ActeCatalogue, lettresCles: LettreCle[]): number {
+  if (acte.tarification !== 'coefficient') return arrondi(acte.tarif)
+  const lettre = lettresCles.find((l) => l.id === acte.lettreCleId)
+  if (!lettre) return 0
+  return arrondi(lettre.valeur * (acte.coefficient ?? 0))
 }
 
-/** Vrai si le contrat appliqué un tarif différent du catalogue pour cet acte. */
-export function estDepassement(acte: ActeCatalogue, contrat: Contrat | undefined): boolean {
+/** La cotation lisible d'un acte : « SF 7,5 », ou son code pour un forfait. */
+export function cotation(acte: ActeCatalogue, lettresCles: LettreCle[]): string {
+  if (acte.tarification !== 'coefficient') return acte.code
+  const lettre = lettresCles.find((l) => l.id === acte.lettreCleId)
+  if (!lettre) return acte.code
+  return `${lettre.code} ${(acte.coefficient ?? 0).toLocaleString('fr-FR')}`
+}
+
+/**
+ * Tarif effectivement facturé : celui que le contrat impose s'il en impose un
+ * (dépassement d'honoraires), sinon celui de la nomenclature.
+ */
+export function tarifApplique(
+  acte: ActeCatalogue,
+  contrat: Contrat | undefined,
+  lettresCles: LettreCle[],
+): number {
   const perso = contrat?.tarifs?.[acte.id]
-  return typeof perso === 'number' && arrondi(perso) !== arrondi(acte.tarif)
+  return typeof perso === 'number' ? arrondi(perso) : tarifCatalogue(acte, lettresCles)
+}
+
+/** Vrai si le contrat applique un tarif différent de celui de la nomenclature. */
+export function estDepassement(
+  acte: ActeCatalogue,
+  contrat: Contrat | undefined,
+  lettresCles: LettreCle[],
+): boolean {
+  const perso = contrat?.tarifs?.[acte.id]
+  return typeof perso === 'number' && arrondi(perso) !== tarifCatalogue(acte, lettresCles)
 }

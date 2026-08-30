@@ -54,12 +54,38 @@ Deux niveaux, pour ne pas avoir à tout ressaisir :
 Et si un jour un acte est facturé différemment, tu peux aussi changer le tarif
 directement sur la ligne, sans rien modifier ailleurs.
 
-## ⚠️ Les tarifs de départ sont à vérifier
+## La valeur de la lettre clé : un seul chiffre à tenir à jour
 
-L'appli est livrée avec les cotations sage-femme courantes déjà remplies, pour
-t'éviter une longue saisie au démarrage. **Ce sont des valeurs indicatives.**
-Les montants conventionnels changent au fil des avenants : vérifie-les avec la
-NGAP en vigueur et corrige-les dans l'onglet Tarifs. Tout est modifiable.
+Un acte de sage-femme n'a pas un prix figé : il a une **cotation** (par exemple
+SF 7,5) et son tarif vaut *coefficient × valeur de la lettre clé*. C'est comme
+ça que l'appli fonctionne.
+
+Concrètement, la rééducation périnéale est cotée SF 7,5 :
+
+| Valeur de SF | Tarif de la séance |
+| --- | --- |
+| 2,80 € (avant février 2024) | 21,00 € |
+| 3,10 € (février 2024) | 23,25 € |
+| 3,20 € (1ᵉʳ janvier 2025) | **24,00 €** |
+
+Quand la convention revalorise la lettre clé, tu changes **un seul chiffre**
+dans l'onglet Tarifs, et tous tes actes se recalculent. Les journées déjà
+saisies, elles, gardent leur montant d'origine : une revalorisation ne réécrit
+jamais le passé.
+
+Certains montants ne suivent pas de coefficient (consultation, majorations,
+IFD, IK) : ceux-là sont saisis en montant fixe, et se modifient directement.
+
+## ⚠️ Les valeurs de départ sont à vérifier
+
+L'appli est livrée pré-remplie, pour t'éviter une longue saisie au démarrage.
+Ces valeurs ont été relevées en août 2026 (avenant 7 à la convention nationale
+des sages-femmes : SF et SP à 3,20 € depuis le 1ᵉʳ janvier 2025, MSF 3,50 €,
+consultation 26,50 €, MDD 22,60 €, IFD 2,75 €, IK 0,61 € et IKM 0,91 €).
+
+**Vérifie-les avec la NGAP en vigueur avant de facturer** — la source qui fait
+foi est la page des tarifs conventionnels d'ameli.fr pour les sages-femmes.
+Tout est modifiable dans l'onglet Tarifs.
 
 ## Vie privée
 

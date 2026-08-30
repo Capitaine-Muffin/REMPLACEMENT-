@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { COULEURS, useStore } from '../store/AppStore'
 import { euros, pourcent, versNombre } from '../domain/format'
-import { tarifApplique } from '../domain/calcul'
+import { cotation, tarifCatalogue } from '../domain/calcul'
 import type { Contrat } from '../domain/types'
 import { CATEGORIES } from '../domain/types'
 import { Modale } from '../components/Modale'
@@ -248,6 +248,7 @@ function TarifsDuContrat({
   onFermer: () => void
 }) {
   const s = useStore()
+  const lettres = s.donnees.lettresCles
   const actes = s.donnees.catalogue.filter((a) => !a.archive)
 
   const definir = (acteId: string, valeur: string) => {
@@ -286,12 +287,14 @@ function TarifsDuContrat({
                   <div key={a.id} className="ligne">
                     <span className="principal-txt">
                       <span className="titre">{a.libelle || a.code}</span>
-                      <span className="meta">Tarif normal : {euros(a.tarif)}</span>
+                      <span className="meta">
+                        {cotation(a, lettres)} · tarif normal {euros(tarifCatalogue(a, lettres))}
+                      </span>
                     </span>
                     <input
                       type="number" inputMode="decimal" min={0} step={0.05}
                       value={perso ?? ''}
-                      placeholder={String(tarifApplique(a, undefined))}
+                      placeholder={String(tarifCatalogue(a, lettres))}
                       onChange={(e) => definir(a.id, e.target.value)}
                       style={{ width: 100 }}
                       aria-label={`Tarif de ${a.libelle} pour ${contrat.nom}`}

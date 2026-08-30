@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest'
-import { calculerLignes, calculerPeriode, tarifApplique, ventilerParContrat } from './calcul'
-import type { ActeCatalogue, Contrat, Journee, Ligne } from './types'
+import {
+  calculerLignes, calculerPeriode, cotation, estDepassement, tarifApplique,
+  tarifCatalogue, ventilerParContrat,
+} from './calcul'
+import type { ActeCatalogue, Contrat, Journee, LettreCle, Ligne } from './types'
 
 function contrat(over: Partial<Contrat> = {}): Contrat {
   return {
@@ -133,21 +136,70 @@ describe('calculerPeriode et ventilerParContrat', () => {
   })
 })
 
-describe('tarifApplique', () => {
-  const acte: ActeCatalogue = {
-    id: 'a1', code: 'C', libelle: 'Consultation', categorie: 'acte',
-    tarif: 25, unite: 'acte', favori: false, archive: false, personnalise: false,
+describe('tarification à la lettre clé', () => {
+  const lettres: LettreCle[] = [
+    { id: 'sf', code: 'SF', libelle: 'Actes obstétricaux', valeur: 3.2 },
+    { id: 'sp', code: 'SP', libelle: 'Prévention', valeur: 3.2 },
+  ]
+
+  const acteCoefficient: ActeCatalogue = {
+    id: 'a1', code: 'SF', libelle: 'Rééducation périnéale', categorie: 'acte',
+    tarification: 'coefficient', lettreCleId: 'sf', coefficient: 7.5,
+    tarif: 0, unite: 'acte', favori: false, archive: false, personnalise: false,
   }
 
-  it('utilisé le tarif du catalogue par defaut', () => {
-    expect(tarifApplique(acte, contrat())).toBe(25)
+  const acteForfait: ActeCatalogue = {
+    id: 'a2', code: 'IFD', libelle: 'Indemnité de déplacement', categorie: 'id',
+    tarification: 'forfait', tarif: 2.75,
+    unite: 'acte', favori: false, archive: false, personnalise: false,
+  }
+
+  it('multiplie la lettre clé par le coefficient', () => {
+    expect(tarifCatalogue(acteCoefficient, lettres)).toBe(24)
   })
 
-  it('utilisé le dépassement d honoraires defini sur le contrat', () => {
-    expect(tarifApplique(acte, contrat({ tarifs: { a1: 32 } }))).toBe(32)
+  it('suit la revalorisation de la lettre clé sans toucher aux actes', () => {
+    const avant = [{ ...lettres[0], valeur: 2.8 }, lettres[1]]
+    expect(tarifCatalogue(acteCoefficient, avant)).toBe(21)
+    const apres = [{ ...lettres[0], valeur: 3.1 }, lettres[1]]
+    expect(tarifCatalogue(acteCoefficient, apres)).toBe(23.25)
+  })
+
+  it('gère un coefficient décimal sans erreur d arrondi', () => {
+    const acte = { ...acteCoefficient, coefficient: 16.5 }
+    expect(tarifCatalogue(acte, lettres)).toBe(52.8)
+  })
+
+  it('utilise le montant fixe pour un forfait', () => {
+    expect(tarifCatalogue(acteForfait, lettres)).toBe(2.75)
+  })
+
+  it('renvoie zéro si la lettre clé a disparu', () => {
+    expect(tarifCatalogue({ ...acteCoefficient, lettreCleId: 'inconnue' }, lettres)).toBe(0)
+  })
+
+  it('affiche la cotation lisible', () => {
+    expect(cotation(acteCoefficient, lettres)).toBe('SF 7,5')
+    expect(cotation({ ...acteCoefficient, coefficient: 12 }, lettres)).toBe('SF 12')
+    expect(cotation(acteForfait, lettres)).toBe('IFD')
+  })
+
+  it('applique le tarif de la nomenclature par défaut', () => {
+    expect(tarifApplique(acteCoefficient, contrat(), lettres)).toBe(24)
+  })
+
+  it('laisse le contrat imposer un dépassement d honoraires', () => {
+    const c = contrat({ tarifs: { a1: 32 } })
+    expect(tarifApplique(acteCoefficient, c, lettres)).toBe(32)
+    expect(estDepassement(acteCoefficient, c, lettres)).toBe(true)
+  })
+
+  it('ne signale pas de dépassement quand le tarif du contrat est identique', () => {
+    const c = contrat({ tarifs: { a1: 24 } })
+    expect(estDepassement(acteCoefficient, c, lettres)).toBe(false)
   })
 
   it('respecte un tarif contractuel à zéro', () => {
-    expect(tarifApplique(acte, contrat({ tarifs: { a1: 0 } }))).toBe(0)
+    expect(tarifApplique(acteCoefficient, contrat({ tarifs: { a1: 0 } }), lettres)).toBe(0)
   })
 })

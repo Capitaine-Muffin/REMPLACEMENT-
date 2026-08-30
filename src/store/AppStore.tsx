@@ -2,9 +2,12 @@ import {
   createContext, useCallback, useContext, useEffect, useMemo, useRef, useState,
   type ReactNode,
 } from 'react'
-import type { ActeCatalogue, Contrat, DonneesApp, Journee, Ligne, Reglages } from '../domain/types'
+import type {
+  ActeCatalogue, Contrat, DonneesApp, Journee, LettreCle, Ligne, Reglages,
+} from '../domain/types'
 import { DepotLocal } from '../storage/local'
 import { donneesInitiales, migrer, type Depot } from '../storage/depot'
+import { arrondi } from '../domain/calcul'
 import { nouvelId } from './id'
 
 interface Store {
@@ -12,6 +15,10 @@ interface Store {
   pret: boolean
   /* Réglages */
   majReglages: (r: Partial<Reglages>) => void
+  /* Lettres clés */
+  majLettreCle: (id: string, l: Partial<LettreCle>) => void
+  ajouterLettreCle: () => LettreCle
+  supprimerLettreCle: (id: string) => void
   /* Contrats */
   ajouterContrat: (c?: Partial<Contrat>) => Contrat
   majContrat: (id: string, c: Partial<Contrat>) => void
@@ -110,6 +117,37 @@ export function FournisseurStore({
 
       majReglages: (r) => modifier((d) => ({ ...d, reglages: { ...d.reglages, ...r } })),
 
+      majLettreCle: (id, l) =>
+        modifier((d) => ({
+          ...d,
+          lettresCles: d.lettresCles.map((x) => (x.id === id ? { ...x, ...l } : x)),
+        })),
+      ajouterLettreCle: () => {
+        const lettre: LettreCle = { id: nouvelId('lc'), code: '', libelle: '', valeur: 0 }
+        modifier((d) => ({ ...d, lettresCles: [...d.lettresCles, lettre] }))
+        return lettre
+      },
+      supprimerLettreCle: (id) =>
+        modifier((d) => ({
+          ...d,
+          lettresCles: d.lettresCles.filter((x) => x.id !== id),
+          // Les actes cotés avec cette lettre basculent sur leur dernier
+          // montant connu plutôt que de tomber à zéro.
+          catalogue: d.catalogue.map((a) =>
+            a.lettreCleId === id
+              ? {
+                  ...a,
+                  tarification: 'forfait' as const,
+                  tarif: arrondi(
+                    (d.lettresCles.find((l) => l.id === id)?.valeur ?? 0) * (a.coefficient ?? 0),
+                  ),
+                  lettreCleId: undefined,
+                  coefficient: undefined,
+                }
+              : a,
+          ),
+        })),
+
       ajouterContrat: (c) => {
         const contrat: Contrat = {
           id: nouvelId('c'),
@@ -147,6 +185,7 @@ export function FournisseurStore({
           code: '',
           libelle: '',
           categorie: 'acte',
+          tarification: 'forfait',
           tarif: 0,
           unite: 'acte',
           favori: false,

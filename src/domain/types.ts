@@ -17,13 +17,36 @@ export const CATEGORIES: { value: Categorie; label: string; court: string }[] = 
   { value: 'ik', label: 'Indemnités kilométriques (IK)', court: 'IK' },
 ]
 
+/**
+ * Une lettre clé de la NGAP (SF, SP...). Sa valeur est fixée par la convention
+ * et change à chaque revalorisation : c'est le seul chiffre à mettre à jour
+ * pour que tous les actes cotés au coefficient suivent.
+ */
+export interface LettreCle {
+  id: string
+  code: string
+  libelle: string
+  valeur: number
+}
+
+/**
+ * Comment le tarif d'un acte est obtenu.
+ * - 'coefficient' : lettre clé × coefficient, la règle NGAP (ex. SF 7,5).
+ * - 'forfait'     : un montant fixe (consultation, majorations, indemnités).
+ */
+export type Tarification = 'coefficient' | 'forfait'
+
 /** Un acte / une majoration / une indemnité du catalogue paramétrable. */
 export interface ActeCatalogue {
   id: string
   code: string
   libelle: string
   categorie: Categorie
-  /** Tarif de référence, modifiable (dépassements d'honoraires inclus). */
+  tarification: Tarification
+  /** Cotation au coefficient : quelle lettre clé, et quel coefficient. */
+  lettreCleId?: string
+  coefficient?: number
+  /** Montant fixe. Utilisé uniquement quand tarification vaut 'forfait'. */
   tarif: number
   /** Unité de la quantite : un acte, ou un kilometre pour les IK. */
   unite: 'acte' | 'km'
@@ -70,6 +93,10 @@ export interface Ligne {
   categorie: Categorie
   /** Nombre d'actes, ou nombre de kilomètres pour les IK. */
   quantite: number
+  /**
+   * Tarif figé au moment de la saisie. Une revalorisation de la lettre clé ne
+   * réécrit donc jamais une journée déjà passée.
+   */
   tarifUnitaire: number
 }
 
@@ -98,9 +125,10 @@ export interface Reglages {
 export interface DonneesApp {
   version: number
   reglages: Reglages
+  lettresCles: LettreCle[]
   contrats: Contrat[]
   catalogue: ActeCatalogue[]
   journees: Journee[]
 }
 
-export const VERSION_DONNEES = 1
+export const VERSION_DONNEES = 2

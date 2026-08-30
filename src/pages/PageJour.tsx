@@ -1,6 +1,8 @@
 import { useMemo, useState } from 'react'
 import { useStore } from '../store/AppStore'
-import { calculerLignes, montantLigne, tarifApplique } from '../domain/calcul'
+import {
+  calculerLignes, cotation, montantLigne, tarifApplique, tarifCatalogue,
+} from '../domain/calcul'
 import {
   aujourdhui, dateLongue, decalerJour, estDimanche, euros, versNombre,
 } from '../domain/format'
@@ -49,11 +51,13 @@ export function PageJour() {
   const ajouter = (acte: ActeCatalogue) => {
     s.ajouterLigne(date, contrat.id, {
       acteId: acte.id,
-      code: acte.code,
+      // On fige la cotation et le tarif du jour : la ligne reste lisible même
+      // si la lettre clé est revalorisée plus tard.
+      code: cotation(acte, s.donnees.lettresCles),
       libelle: acte.libelle,
       categorie: acte.categorie,
       quantite: 1,
-      tarifUnitaire: tarifApplique(acte, contrat),
+      tarifUnitaire: tarifApplique(acte, contrat, s.donnees.lettresCles),
     })
     setChoixOuvert(false)
   }
@@ -277,6 +281,8 @@ function LigneSaisie({
           onClick={() => setTarifOuvert((v) => !v)}
           title="Modifier le tarif de cette ligne"
         >
+          {/* La cotation vaut autant que le montant : c'est elle qu'on relit. */}
+          {ligne.code && <strong>{ligne.code}</strong>}{' '}
           {km ? 'km ×' : '×'} {euros(ligne.tarifUnitaire)}
         </button>
 
@@ -314,6 +320,7 @@ function ChoixActe({
   const s = useStore()
   const [recherche, setRecherche] = useState('')
   const [categorie, setCategorie] = useState<Categorie | 'favoris'>('favoris')
+  const lettres = s.donnees.lettresCles
 
   const disponibles = s.donnees.catalogue.filter((a) => !a.archive)
   const q = recherche.trim().toLowerCase()
@@ -367,11 +374,11 @@ function ChoixActe({
               <div className="principal-txt">
                 <div className="titre">{a.libelle || a.code}</div>
                 <div className="meta">
-                  {a.code} · {CATEGORIES.find((c) => c.value === a.categorie)?.court}
+                  {cotation(a, lettres)} · {CATEGORIES.find((c) => c.value === a.categorie)?.court}
                 </div>
               </div>
               <span className="montant">
-                {euros(a.tarif)}
+                {euros(tarifCatalogue(a, lettres))}
                 {a.unite === 'km' && <span style={{ fontWeight: 500 }}> /km</span>}
               </span>
             </button>
