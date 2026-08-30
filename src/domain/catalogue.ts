@@ -109,17 +109,58 @@ const DEFAUTS: Defaut[] = [
     cotation: [LETTRE_SP, 1], note: 'Mets le coefficient que tu veux',
   },
 
-  // --- Actes à montant fixe ---------------------------------------------
+  // --- Consultations ------------------------------------------------------
   {
-    code: 'C', libelle: 'Consultation (majoration MSF comprise)', categorie: 'acte',
+    code: 'C + MSF', libelle: 'Consultation (majoration MSF comprise)', categorie: 'acte',
     forfait: 26.5, favori: true, note: 'À vérifier',
   },
   {
-    code: 'MSF', libelle: 'Majoration sage-femme (MSF)', categorie: 'majoration',
-    forfait: 3.5, note: 'À vérifier',
+    code: 'C', libelle: 'Consultation seule (sans MSF)', categorie: 'acte',
+    forfait: 23, note: 'À vérifier',
   },
 
-  // --- Majorations -------------------------------------------------------
+  // --- Actes CCAM ---------------------------------------------------------
+  // Les codes sont stables d'une source à l'autre ; les montants, non. Ils
+  // sont donc tous marqués à vérifier, en disant ce qui est douteux.
+  {
+    code: 'JKHD001', libelle: 'Frottis — prélèvement cervico-vaginal', categorie: 'acte',
+    forfait: 12.46, favori: true,
+    note: 'À vérifier — CCAM. Se cumule avec la consultation : compte une ligne C + MSF en plus',
+  },
+  {
+    code: 'JKLD001', libelle: "Pose d'un dispositif intra-utérin (DIU)", categorie: 'acte',
+    forfait: 38.4, favori: true,
+    note: 'À vérifier — CCAM. Sources divergentes : 38,40 € ou 62,70 €',
+  },
+  {
+    code: 'JKKD001', libelle: "Changement d'un dispositif intra-utérin (DIU)",
+    categorie: 'acte', forfait: 38.4, note: 'À vérifier — CCAM',
+  },
+  {
+    code: 'JKGD001',
+    libelle: "Ablation d'un DIU par matériel de préhension, par voie vaginale",
+    categorie: 'acte', forfait: 0,
+    note: 'À vérifier — CCAM. Montant à renseigner : je ne l\'ai pas trouvé',
+  },
+  {
+    code: 'QZLA004', libelle: "Pose d'un implant contraceptif (sous-cutané)",
+    categorie: 'acte', forfait: 17.99, favori: true,
+    note: 'À vérifier — CCAM. Sources divergentes : 17,99 € ou 14,47 €',
+  },
+  {
+    code: 'QZGA002', libelle: "Retrait ou changement d'un implant contraceptif",
+    categorie: 'acte', forfait: 41.8, favori: true, note: 'À vérifier — CCAM',
+  },
+
+  // --- Majorations et forfaits -------------------------------------------
+  {
+    // Rangée avec les actes, et non avec les majorations : la MSF fait partie
+    // des honoraires de consultation. La catégorie « majorations » ne sert ici
+    // qu'au férié, au dimanche et à la nuit, que le contrat peut sortir de
+    // l'assiette de rétrocession.
+    code: 'MSF', libelle: 'Majoration sage-femme (MSF)', categorie: 'acte',
+    forfait: 3.5, note: 'À vérifier',
+  },
   {
     code: 'MDD', libelle: 'Majoration dimanche et jour férié', categorie: 'majoration',
     forfait: 22.6, favori: true, note: 'À vérifier',

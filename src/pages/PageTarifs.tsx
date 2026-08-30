@@ -12,14 +12,17 @@ import {
 
 export function PageTarifs() {
   const s = useStore()
-  const [categorie, setCategorie] = useState<Categorie>('acte')
+  const [categorie, setCategorie] = useState<Categorie | 'verifier'>('acte')
   const [recherche, setRecherche] = useState('')
   const [voirArchives, setVoirArchives] = useState(false)
 
+  const nbAVerifier = s.donnees.catalogue.filter((a) => !a.archive && aVerifier(a.note)).length
   const q = recherche.trim().toLowerCase()
   const actes = s.donnees.catalogue
     .filter((a) => voirArchives || !a.archive)
-    .filter((a) => (q ? true : a.categorie === categorie))
+    .filter((a) =>
+      q ? true : categorie === 'verifier' ? aVerifier(a.note) : a.categorie === categorie,
+    )
     .filter((a) => !q || a.libelle.toLowerCase().includes(q) || a.code.toLowerCase().includes(q))
 
   return (
@@ -48,6 +51,15 @@ export function PageTarifs() {
               {c.court}
             </button>
           ))}
+          {nbAVerifier > 0 && (
+            <button
+              type="button" className="puce"
+              aria-pressed={categorie === 'verifier'}
+              onClick={() => setCategorie('verifier')}
+            >
+              À vérifier ({nbAVerifier})
+            </button>
+          )}
         </div>
       )}
 
@@ -65,7 +77,10 @@ export function PageTarifs() {
         <button
           type="button" className="btn principal"
           onClick={() =>
-            s.ajouterActe({ categorie: q ? 'acte' : categorie, libelle: 'Nouvel acte' })
+            s.ajouterActe({
+              categorie: categorie === 'verifier' || q ? 'acte' : categorie,
+              libelle: 'Nouvel acte',
+            })
           }
         >
           <IconePlus /> Ajouter un acte

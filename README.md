@@ -91,8 +91,17 @@ Le catalogue livré distingue deux choses, et l'appli le montre.
 | Indemnité de déplacement (MD) | 10 € |
 
 **Issu de recherches, non confirmé** — marqué **« à vérifier »** dans l'appli :
-consultation, MSF, majorations dimanche/férié et de nuit, IK. Corrige le montant
-et la mention disparaît d'elle-même.
+consultation, MSF, majorations dimanche/férié et de nuit, IK, et tous les actes
+CCAM. Corrige le montant et la mention disparaît d'elle-même. Un filtre
+« À vérifier » dans l'onglet Tarifs les regroupe pour les contrôler d'un bloc.
+
+Les actes CCAM (frottis JKHD001, pose de DIU JKLD001, changement JKKD001,
+ablation JKGD001, pose d'implant QZLA004, retrait d'implant QZGA002) sont
+livrés avec leur code — stable d'une source à l'autre — mais leurs montants
+divergent selon les sources, d'où la mention.
+
+Une consultation avec frottis se note en plusieurs lignes (C + MSF, puis l'acte
+CCAM) : la liste d'ajout reste ouverte pour les enchaîner d'un seul geste.
 
 Les lettres clés SF et SP sont à 3,20 € (avenant 7, 1ᵉʳ janvier 2025). La source
 qui fait foi reste la page des tarifs conventionnels d'ameli.fr pour les

@@ -26,6 +26,7 @@ export function PageJour() {
     () => s.donnees.reglages.contratParDefautId ?? contratsActifs[0]?.id ?? '',
   )
   const [choixOuvert, setChoixOuvert] = useState(false)
+  const [nbAjoutes, setNbAjoutes] = useState(0)
   const [copieOuverte, setCopieOuverte] = useState(false)
 
   const contrat =
@@ -49,7 +50,10 @@ export function PageJour() {
     )
   }
 
+  // La liste reste ouverte : une consultation avec frottis, c'est trois
+  // lignes (C + MSF + acte CCAM), autant les enchaîner d'un même geste.
   const ajouter = (acte: ActeCatalogue) => {
+    setNbAjoutes((n) => n + 1)
     s.ajouterLigne(date, contrat.id, {
       acteId: acte.id,
       // On fige la cotation et le tarif du jour : la ligne reste lisible même
@@ -60,7 +64,6 @@ export function PageJour() {
       quantite: 1,
       tarifUnitaire: tarifApplique(acte, contrat, s.donnees.lettresCles),
     })
-    setChoixOuvert(false)
   }
 
   return (
@@ -135,7 +138,7 @@ export function PageJour() {
           <h2>Actes de la journée</h2>
           <button
             type="button" className="btn principal petit"
-            onClick={() => setChoixOuvert(true)}
+            onClick={() => { setNbAjoutes(0); setChoixOuvert(true) }}
           >
             <IconePlus /> Ajouter
           </button>
@@ -214,6 +217,7 @@ export function PageJour() {
 
       <ChoixActe
         ouverte={choixOuvert}
+        nbAjoutes={nbAjoutes}
         onFermer={() => setChoixOuvert(false)}
         onChoisir={ajouter}
       />
@@ -312,9 +316,10 @@ function LigneSaisie({
 /* --- Choix d'un acte dans le catalogue ----------------------------------- */
 
 function ChoixActe({
-  ouverte, onFermer, onChoisir,
+  ouverte, nbAjoutes, onFermer, onChoisir,
 }: {
   ouverte: boolean
+  nbAjoutes: number
   onFermer: () => void
   onChoisir: (a: ActeCatalogue) => void
 }) {
@@ -335,7 +340,23 @@ function ChoixActe({
       : disponibles.filter((a) => a.categorie === categorie)
 
   return (
-    <Modale titre="Ajouter à la journée" ouverte={ouverte} onFermer={onFermer}>
+    <Modale
+      titre="Ajouter à la journée"
+      ouverte={ouverte}
+      onFermer={onFermer}
+      actions={
+        <div className="actions">
+          <span style={{ flex: 1, alignSelf: 'center', fontSize: '.85rem', fontWeight: 600 }}>
+            {nbAjoutes === 0
+              ? 'Touche un acte pour l\'ajouter'
+              : `${nbAjoutes} ligne${nbAjoutes > 1 ? 's' : ''} ajoutée${nbAjoutes > 1 ? 's' : ''}`}
+          </span>
+          <button type="button" className="btn principal" onClick={onFermer}>
+            Terminé
+          </button>
+        </div>
+      }
+    >
       <input
         type="text" placeholder="Rechercher un acte, un code..."
         value={recherche} onChange={(e) => setRecherche(e.target.value)}
