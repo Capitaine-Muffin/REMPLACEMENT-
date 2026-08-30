@@ -137,8 +137,11 @@ export function PageJour() {
               {contratsActifs.map((c) => {
                 // Le montant déjà noté pour ce contrat ce jour-là : sans lui, on
                 // croit sa journée vide alors qu'elle est saisie sur l'autre.
+                // Inutile sur le contrat affiché, dont le total figure juste
+                // en dessous — et la place gagnée évite de rogner les pastilles.
                 const sienne = s.journee(date, c.id)
-                const total = sienne ? calculerLignes(sienne.lignes, c).brut : 0
+                const total =
+                  c.id === contrat.id ? 0 : sienne ? calculerLignes(sienne.lignes, c).brut : 0
                 return (
                   <button
                     key={c.id} type="button" className="puce"

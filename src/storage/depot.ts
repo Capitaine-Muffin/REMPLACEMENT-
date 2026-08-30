@@ -21,7 +21,7 @@ export function donneesInitiales(): DonneesApp {
     contrats: [
       {
         id: 'contrat-1',
-        nom: 'Mon premier contrat',
+        nom: 'Contrat 1',
         couleur: '#0f766e',
         tauxRetrocession: 0.3,
         // Cas le plus frequent : la rétrocession ne porte que sur les actes.
@@ -43,61 +43,93 @@ export function migrer(brut: unknown): DonneesApp {
   const base = donneesInitiales()
   if (!brut || typeof brut !== 'object') return base
   const d = brut as Partial<DonneesApp>
+  const catalogue = migrerCatalogue(d, base)
 
   return {
     version: VERSION_DONNEES,
     reglages: { ...base.reglages, ...(d.reglages ?? {}) },
     lettresCles:
       Array.isArray(d.lettresCles) && d.lettresCles.length ? d.lettresCles : base.lettresCles,
-    contrats: migrerContrats(d, base),
-    catalogue: migrerCatalogue(d, base),
+    contrats: migrerContrats(d, base, catalogue),
+    catalogue,
     // Les journées gardent leurs montants : une revalorisation ne réécrit
     // jamais une feuille déjà remplie.
     journees: Array.isArray(d.journees) ? d.journees : [],
   }
 }
 
-/** Vrai pour un acte fourni par l'application (par opposition à créé par elle). */
-const estFourni = (id: string) => id.startsWith('def-')
-
 /**
- * Le catalogue livré évolue à chaque correction de cotation : il est donc
- * remplacé dès que les données viennent d'une version antérieure. Les actes
- * que l'utilisatrice a créés, eux, ne sont jamais touchés.
+ * Le catalogue livré évolue à chaque correction de cotation. Il est donc repris
+ * de la nouvelle version, mais sans écraser le travail de l'utilisatrice :
  *
- * Les journées déjà saisies ne dépendent pas du catalogue : chaque ligne porte
- * son propre libellé, sa cotation et son tarif.
+ * - un acte fourni qu'elle a confirmé ou corrigé garde SON montant, sa cotation
+ *   et sa provenance — vérifier un tarif est un travail, il ne doit pas être
+ *   perdu à la mise à jour suivante ;
+ * - ses favoris et ses archives sont conservés dans tous les cas ;
+ * - les actes qu'elle a créés ne sont jamais touchés ;
+ * - un acte fourni disparu du nouveau catalogue disparaît, à moins qu'elle ne
+ *   l'ait confirmé, auquel cas il est gardé comme un acte à elle.
+ *
+ * Les journées déjà saisies ne dépendent d'aucun de ces identifiants : chaque
+ * ligne porte son propre libellé, sa cotation et son tarif.
  */
 function migrerCatalogue(d: Partial<DonneesApp>, base: DonneesApp): ActeCatalogue[] {
   if (!Array.isArray(d.catalogue) || !d.catalogue.length) return base.catalogue
   if ((d.version ?? 1) >= VERSION_DONNEES) return d.catalogue
 
-  const personnalises = d.catalogue
-    .filter((a) => a.personnalise && !estFourni(a.id))
+  const anciens = new Map(d.catalogue.map((a) => [a.id, a]))
+
+  const fournis = base.catalogue.map<ActeCatalogue>((neuf) => {
+    const ancien = anciens.get(neuf.id)
+    if (!ancien) return neuf
+    const sien = ancien.verifie === true
+    return {
+      ...neuf,
+      favori: ancien.favori,
+      archive: ancien.archive,
+      ...(sien
+        ? {
+            tarification: ancien.tarification ?? neuf.tarification,
+            lettreCleId: ancien.lettreCleId ?? neuf.lettreCleId,
+            coefficient: ancien.coefficient ?? neuf.coefficient,
+            tarif: ancien.tarif,
+            verifie: true,
+            source: ancien.source,
+          }
+        : {}),
+    }
+  })
+
+  const fournisIds = new Set(base.catalogue.map((a) => a.id))
+  const conserves = d.catalogue
+    .filter((a) => !fournisIds.has(a.id) && (a.personnalise || a.verifie === true))
     .map<ActeCatalogue>((a) => ({
       ...a,
       tarification: a.tarification ?? 'forfait',
       verifie: a.verifie ?? true,
       source: a.source ?? 'Saisi par toi',
+      personnalise: true,
     }))
 
-  return [...base.catalogue, ...personnalises]
+  return [...fournis, ...conserves]
 }
 
 /**
- * Les identifiants du catalogue livré sont réattribués quand celui-ci est
- * remplacé : un tarif de contrat qui les visait désignerait alors un autre
- * acte. Ces dépassements-là sont donc retirés plutôt que déplacés sur le
- * mauvais acte ; ceux qui visent un acte créé par l'utilisatrice restent.
+ * Un tarif de contrat qui vise un acte disparu du catalogue ne désigne plus
+ * rien : il est retiré plutôt que laissé à traîner.
  */
-function migrerContrats(d: Partial<DonneesApp>, base: DonneesApp): Contrat[] {
+function migrerContrats(d: Partial<DonneesApp>, base: DonneesApp, catalogue: ActeCatalogue[]): Contrat[] {
   if (!Array.isArray(d.contrats) || !d.contrats.length) return base.contrats
   if ((d.version ?? 1) >= VERSION_DONNEES) return d.contrats
 
+  const connus = new Set(catalogue.map((a) => a.id))
   return d.contrats.map((c) => ({
     ...c,
+    // « Mon premier contrat » était le nom livré : il allongeait les pastilles
+    // de la feuille du jour. Renommé s'il n'a jamais été personnalisé.
+    nom: c.nom === 'Mon premier contrat' ? 'Contrat 1' : c.nom,
     tarifs: Object.fromEntries(
-      Object.entries(c.tarifs ?? {}).filter(([acteId]) => !estFourni(acteId)),
+      Object.entries(c.tarifs ?? {}).filter(([acteId]) => connus.has(acteId)),
     ),
   }))
 }

@@ -151,7 +151,9 @@ export function FournisseurStore({
       ajouterContrat: (c) => {
         const contrat: Contrat = {
           id: nouvelId('c'),
-          nom: 'Nouveau contrat',
+          // Un nom court par défaut : il s'affiche sur les pastilles de la
+          // feuille du jour, où la place est comptée.
+          nom: nomDeContratLibre(donnees.contrats),
           couleur: COULEURS[donnees.contrats.length % COULEURS.length],
           tauxRetrocession: 0.3,
           assiette: { majorations: false, id: false, ik: false },
@@ -296,6 +298,15 @@ export function FournisseurStore({
   )
 
   return <Contexte.Provider value={store}>{children}</Contexte.Provider>
+}
+
+/** Premier « Contrat N » qui ne soit pas déjà pris. */
+function nomDeContratLibre(contrats: Contrat[]): string {
+  const pris = new Set(contrats.map((c) => c.nom))
+  for (let n = 1; ; n++) {
+    const nom = `Contrat ${n}`
+    if (!pris.has(nom)) return nom
+  }
 }
 
 export const COULEURS = [

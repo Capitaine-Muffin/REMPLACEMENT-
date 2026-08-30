@@ -13,7 +13,7 @@ create extension if not exists "pgcrypto";
 -- Réglages generaux de l'utilisatrice ------------------------------------------
 create table if not exists public.profils (
   user_id    uuid primary key references auth.users (id) on delete cascade,
-  version    integer not null default 5,
+  version    integer not null default 6,
   reglages   jsonb not null default '{}'::jsonb,
   updated_at timestamptz not null default now()
 );
