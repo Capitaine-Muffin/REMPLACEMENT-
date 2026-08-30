@@ -125,7 +125,13 @@ sages-femmes.
 L'appli ne contient **aucune donnée de santé** : ni nom de patiente, ni date de
 naissance, ni motif de consultation. Uniquement des cotations, des quantités et
 des montants. C'est un choix volontaire : cela évite les obligations liées à
-l'hébergement de données de santé (HDS). Évite d'écrire un nom dans les notes.
+l'hébergement de données de santé (HDS).
+
+**Il est interdit d'y inscrire une donnée médicale ou une donnée permettant
+d'identifier une patiente**, y compris dans le champ de notes. Toute
+information saisie doit être anonymisée par le professionnel de santé qui la
+renseigne : c'est la condition qui maintient l'application hors du régime des
+données de santé.
 
 Par défaut, tout est enregistré **sur ton téléphone uniquement**, et rien n'est
 envoyé sur Internet. L'appli fonctionne donc sans réseau, y compris en visite à

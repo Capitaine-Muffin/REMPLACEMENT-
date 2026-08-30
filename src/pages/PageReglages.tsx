@@ -85,7 +85,7 @@ export function PageReglages() {
           <div className="note info">
             <IconeInfo />
             <span>
-              Tout est enregistre {supabaseActif ? 'sur ton compte' : 'sur cet appareil uniquement'}.
+              Tout est enregistré {supabaseActif ? 'sur ton compte' : 'sur cet appareil uniquement'}.
               {!supabaseActif && ' Fais une sauvegarde de temps en temps : si tu changes de téléphone, rien ne suit tout seul.'}
             </span>
           </div>
@@ -133,9 +133,18 @@ export function PageReglages() {
         <header><h2>Vie privée</h2></header>
         <div className="carte-corps">
           <p style={{ fontSize: '.83rem', color: 'var(--texte-doux)', margin: 0 }}>
-            Cette application ne contient aucune information sur les patientes :
-            ni nom, ni date de naissance, ni motif. Uniquement des cotations, des
-            quantités et des montants. Évite d'écrire un nom dans les notes.
+            <strong style={{ color: 'var(--texte)' }}>
+              Il est interdit d'inscrire dans cette application une donnée
+              médicale ou une donnée permettant d'identifier une patiente
+            </strong>{' '}
+            — nom, date de naissance, adresse, motif de consultation. Toute
+            information saisie doit être anonymisée par le professionnel de
+            santé qui la renseigne.
+          </p>
+          <p style={{ fontSize: '.83rem', color: 'var(--texte-doux)', margin: 0 }}>
+            Seules les cotations, les quantités et les montants ont leur place
+            ici. C'est à cette condition que l'application ne relève pas de
+            l'hébergement de données de santé.
           </p>
         </div>
       </div>

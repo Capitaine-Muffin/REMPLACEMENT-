@@ -256,7 +256,7 @@ export function PageJour() {
           {!notesRepliees && (
           <div className="carte-corps">
             <label>
-              Notes (pas de nom ni d'information médicale)
+              Notes — aucune donnée médicale ni nominative
               <textarea
                 value={journee.notes ?? ''}
                 placeholder="Ex : remplacement à la journée, cabinet fermé le matin"
