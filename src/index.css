@@ -408,6 +408,20 @@ dialog {
 }
 dialog::backdrop { background: rgba(8, 12, 16, .5); }
 
+/* La carte d'une fenêtre ne rogne pas son contenu : c'est ce qui permet au
+   titre et au pied de rester collés pendant que le corps défile. */
+.modale { border: 0; box-shadow: none; overflow: visible; }
+
+.modale-entete {
+  position: sticky; top: 0; z-index: 2;
+  background: var(--surface);
+}
+.modale-pied {
+  position: sticky; bottom: 0; z-index: 2;
+  background: var(--surface);
+  border-top: 1px solid var(--bordure);
+}
+
 .tableau { width: 100%; border-collapse: collapse; font-size: .82rem; }
 .tableau th, .tableau td { padding: 8px 10px; text-align: right; white-space: nowrap; }
 .tableau th:first-child, .tableau td:first-child { text-align: left; white-space: normal; }
@@ -520,9 +534,16 @@ dialog::backdrop { background: rgba(8, 12, 16, .5); }
   flex: 1; min-width: 0;
   justify-content: center;
   font-weight: 700;
-  /* La date est déjà en français : pas de majuscule initiale forcée ailleurs. */
-  text-transform: none;
 }
+
+/* Menus mois et année : on saute d'un mois à l'autre, mais aussi d'un bout de
+   l'année à l'autre sans une dizaine d'appuis sur la flèche. */
+.choix-mois, .choix-annee {
+  min-height: 42px; padding: 0 6px;
+  font-weight: 700; text-align: center;
+}
+.choix-mois { flex: 1; min-width: 0; }
+.choix-annee { flex: none; width: 82px; }
 
 .calendrier {
   display: grid;
@@ -539,26 +560,40 @@ dialog::backdrop { background: rgba(8, 12, 16, .5); }
 
 .calendrier-jour {
   aspect-ratio: 1;
-  display: grid; place-items: center;
+  display: grid; grid-template-rows: 1fr auto; place-items: center;
+  padding-bottom: 5px;
   border: 1px solid transparent; border-radius: var(--rayon-s);
   background: var(--surface-2); color: var(--texte);
   font: inherit; font-size: .9rem; font-variant-numeric: tabular-nums;
   cursor: pointer;
 }
+.calendrier-jour .numero { align-self: end; }
 .calendrier-jour:hover { border-color: var(--bordure-forte); }
 
-/* Un jour déjà saisi : c'est l'information qu'on vient chercher ici. */
-.calendrier-jour.rempli { font-weight: 800; background: var(--accent-doux); color: var(--accent-texte); }
+/* La pastille occupe toujours sa place, remplie ou non : sans cela les nombres
+   ne seraient pas alignés d'une case à l'autre. */
+.calendrier-jour .marque {
+  width: 5px; height: 5px; margin-top: 3px;
+  border-radius: 50%;
+  background: transparent;
+}
+.calendrier-jour.rempli { font-weight: 700; }
+.calendrier-jour.rempli .marque { background: var(--accent); }
 
 /* Dimanches et jours fériés, où les majorations s'appliquent. */
 .calendrier-jour.chome { color: var(--alerte); }
-.calendrier-jour.chome.rempli { color: var(--accent-texte); background: var(--alerte-fond); }
+
+/* Jours des mois voisins : présents pour que la grille garde six semaines,
+   mais visiblement en retrait. */
+.calendrier-jour.voisin { background: transparent; color: var(--texte-faible); }
+.calendrier-jour.voisin.rempli .marque { background: var(--texte-faible); }
 
 .calendrier-jour.aujourdhui { border-color: var(--texte-faible); }
 .calendrier-jour.choisi {
   background: var(--accent); border-color: var(--accent); color: var(--sur-accent);
-  font-weight: 800;
+  font-weight: 700;
 }
+.calendrier-jour.choisi .marque { background: var(--sur-accent); }
 
 .calendrier-legende {
   display: flex; align-items: center; gap: 8px;
@@ -567,6 +602,6 @@ dialog::backdrop { background: rgba(8, 12, 16, .5); }
 }
 .calendrier-jour.exemple {
   aspect-ratio: auto;
-  width: 26px; height: 26px; flex: none;
+  width: 28px; height: 28px; flex: none;
   cursor: default; font-size: .78rem;
 }

@@ -1,12 +1,18 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Modale } from './Modale'
 import { IconeDroite, IconeGauche } from './Icones'
-import {
-  aujourdhui, decalerMois, depuisISO, joursDuMois, libelleMois, moisDe,
-} from '../domain/format'
+import { aujourdhui, decalerJour, decalerMois, depuisISO, moisDe } from '../domain/format'
 import { nomFerie } from '../domain/feries'
 
 const JOURS = ['lun', 'mar', 'mer', 'jeu', 'ven', 'sam', 'dim']
+const MOIS = [
+  'janvier', 'février', 'mars', 'avril', 'mai', 'juin',
+  'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre',
+]
+
+/** Toujours six semaines : la hauteur du calendrier ne doit pas sauter d'un
+ *  mois à l'autre selon qu'il en compte quatre, cinq ou six. */
+const SEMAINES = 6
 
 /**
  * Calendrier de l'application, en remplacement de celui du téléphone.
@@ -34,9 +40,25 @@ export function ChoixDate({
     if (ouverte) setMois(moisDe(date))
   }, [ouverte, date])
 
-  const jours = joursDuMois(mois)
-  // Lundi en première colonne, comme un calendrier français.
-  const decalage = (depuisISO(jours[0]).getDay() + 6) % 7
+  const [annee, numeroMois] = mois.split('-').map(Number)
+
+  /** Les 42 cases, du lundi précédant le 1er au dernier jour de la grille. */
+  const cases = useMemo(() => {
+    const premier = `${mois}-01`
+    const recul = (depuisISO(premier).getDay() + 6) % 7
+    const depart = decalerJour(premier, -recul)
+    return Array.from({ length: SEMAINES * 7 }, (_, i) => decalerJour(depart, i))
+  }, [mois])
+
+  // Les années proposées : celles où quelque chose a été saisi, plus l'actuelle
+  // et sa voisine, pour pouvoir noter une journée à l'avance.
+  const annees = useMemo(() => {
+    const actuelle = Number(aujourdhui().slice(0, 4))
+    const vues = [...joursRemplis].map((j) => Number(j.slice(0, 4)))
+    const min = Math.min(actuelle - 1, annee, ...vues)
+    const max = Math.max(actuelle + 1, annee, ...vues)
+    return Array.from({ length: max - min + 1 }, (_, i) => min + i)
+  }, [joursRemplis, annee])
 
   const choisir = (jour: string) => {
     onChoisir(jour)
@@ -52,7 +74,22 @@ export function ChoixDate({
         >
           <IconeGauche />
         </button>
-        <span className="courant">{libelleMois(mois)}</span>
+
+        <select
+          className="choix-mois" value={numeroMois} aria-label="Mois"
+          onChange={(e) => setMois(`${annee}-${String(Number(e.target.value)).padStart(2, '0')}`)}
+        >
+          {MOIS.map((nom, i) => (
+            <option key={nom} value={i + 1}>{nom}</option>
+          ))}
+        </select>
+        <select
+          className="choix-annee" value={annee} aria-label="Année"
+          onChange={(e) => setMois(`${e.target.value}-${String(numeroMois).padStart(2, '0')}`)}
+        >
+          {annees.map((a) => <option key={a} value={a}>{a}</option>)}
+        </select>
+
         <button
           type="button" className="btn icone" aria-label="Mois suivant"
           onClick={() => setMois(decalerMois(mois, 1))}
@@ -65,9 +102,8 @@ export function ChoixDate({
         {JOURS.map((j) => (
           <span key={j} className="calendrier-entete" aria-hidden="true">{j}</span>
         ))}
-        {Array.from({ length: decalage }, (_, i) => <span key={`vide-${i}`} />)}
 
-        {jours.map((jour) => {
+        {cases.map((jour) => {
           const d = depuisISO(jour)
           const ferie = nomFerie(jour)
           const rempli = joursRemplis.has(jour)
@@ -77,6 +113,7 @@ export function ChoixDate({
             jour === date && 'choisi',
             jour === aujourdhui() && 'aujourdhui',
             (ferie || d.getDay() === 0) && 'chome',
+            moisDe(jour) !== mois && 'voisin',
           ].filter(Boolean).join(' ')
 
           return (
@@ -86,7 +123,8 @@ export function ChoixDate({
               title={ferie}
               onClick={() => choisir(jour)}
             >
-              {d.getDate()}
+              <span className="numero">{d.getDate()}</span>
+              <span className="marque" aria-hidden="true" />
               {rempli && <span className="sr"> (journée saisie)</span>}
             </button>
           )
@@ -94,9 +132,12 @@ export function ChoixDate({
       </div>
 
       <p className="calendrier-legende">
-        <span className="calendrier-jour rempli exemple" aria-hidden="true">8</span>
-        Les jours en gras contiennent déjà une saisie. Les dimanches et jours
-        fériés sont en couleur.
+        <span className="calendrier-jour rempli exemple" aria-hidden="true">
+          <span className="numero">8</span>
+          <span className="marque" />
+        </span>
+        Un point sous le nombre signale une journée déjà saisie. Les dimanches et
+        jours fériés sont en couleur.
       </p>
 
       <div className="actions fin">

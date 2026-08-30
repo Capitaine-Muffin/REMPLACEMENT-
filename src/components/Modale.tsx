@@ -25,13 +25,16 @@ export function Modale({
       onCancel={(e) => { e.preventDefault(); onFermer() }}
       onClick={(e) => { if (e.target === ref.current) onFermer() }}
     >
-      <div className="carte" style={{ border: 0, boxShadow: 'none' }}>
-        <header>
+      {/* Le titre et le pied restent visibles quand le contenu défile : sans
+          cela, la confirmation d'ajout et le bouton de fermeture se retrouvent
+          sous le bas de la fenêtre dès que la liste est longue. */}
+      <div className="carte modale">
+        <header className="modale-entete">
           <h2>{titre}</h2>
           <button type="button" className="btn discret petit" onClick={onFermer}>Fermer</button>
         </header>
         <div className="carte-corps">{children}</div>
-        {actions && <div className="carte-corps" style={{ paddingTop: 0 }}>{actions}</div>}
+        {actions && <div className="carte-corps modale-pied">{actions}</div>}
       </div>
     </dialog>
   )
