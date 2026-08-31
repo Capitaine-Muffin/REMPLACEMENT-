@@ -116,6 +116,20 @@ divergent selon les sources, d'où la mention.
 Une consultation avec frottis se note en plusieurs lignes (C + MSF, puis l'acte
 CCAM) : la liste d'ajout reste ouverte pour les enchaîner d'un seul geste.
 
+## Les suppléments d'un acte
+
+Une indemnité de déplacement, des kilomètres ou une majoration de dimanche se
+comptent **par acte** et non par journée : trois visites à domicile, trois
+indemnités. Ils se rattachent donc à l'acte, par des pastilles placées sous
+lui, et la ligne affiche son total complet — une visite à domicile est une
+ligne, pas trois.
+
+Le rattachement ne change rien aux calculs : chaque supplément compte dans sa
+propre catégorie, exactement comme s'il avait été saisi séparément, et
+l'assiette de rétrocession ne dépend jamais de la façon dont la journée a été
+organisée à l'écran. Les journées saisies avant cette possibilité gardent leurs
+indemnités en lignes séparées, qui restent valables.
+
 Les lettres clés SF et SP sont à 3,20 € (avenant 7, 1ᵉʳ janvier 2025). La source
 qui fait foi reste la page des tarifs conventionnels d'ameli.fr pour les
 sages-femmes.

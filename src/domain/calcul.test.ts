@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   calculerLignes, calculerPeriode, cotation, estDepassement, journeeVide,
-  tarifApplique, tarifCatalogue, ventilerParContrat,
+  montantLigne, montantTotalLigne, tarifApplique, tarifCatalogue, ventilerParContrat,
 } from './calcul'
 import type { ActeCatalogue, Contrat, Journee, LettreCle, Ligne } from './types'
 
@@ -133,6 +133,58 @@ describe('calculerPeriode et ventilerParContrat', () => {
     const b = v.find((x) => x.contratId === 'c2')!
     expect(b.nbJours).toBe(1)
     expect(b.totaux.net).toBe(77.44)
+  })
+})
+
+describe('suppléments rattachés à un acte', () => {
+  const visite = (): Ligne =>
+    ligne({
+      categorie: 'acte', quantite: 1, tarifUnitaire: 52.8,
+      supplements: [
+        ligne({ categorie: 'id', quantite: 1, tarifUnitaire: 10 }),
+        ligne({ categorie: 'ik', quantite: 12, tarifUnitaire: 0.61 }),
+      ],
+    })
+
+  it('range chaque supplément dans sa propre catégorie', () => {
+    const t = calculerLignes([visite()], contrat())
+    expect(t.actes).toBe(52.8)
+    expect(t.id).toBe(10)
+    expect(t.ik).toBe(7.32)
+    expect(t.brut).toBe(70.12)
+  })
+
+  it('donne le même résultat que les mêmes éléments en lignes séparées', () => {
+    const separees = [
+      ligne({ categorie: 'acte', quantite: 1, tarifUnitaire: 52.8 }),
+      ligne({ categorie: 'id', quantite: 1, tarifUnitaire: 10 }),
+      ligne({ categorie: 'ik', quantite: 12, tarifUnitaire: 0.61 }),
+    ]
+    expect(calculerLignes([visite()], contrat())).toEqual(
+      calculerLignes(separees, contrat()),
+    )
+  })
+
+  it('laisse les suppléments hors de l assiette quand le contrat les exclut', () => {
+    const t = calculerLignes([visite()], contrat())
+    expect(t.assiette).toBe(52.8)
+    expect(t.retrocession).toBe(15.84)
+  })
+
+  it('les inclut quand le contrat le prévoit', () => {
+    const c = contrat({ assiette: { majorations: true, id: true, ik: true } })
+    expect(calculerLignes([visite()], c).assiette).toBe(70.12)
+  })
+
+  it('ne compte pas un supplément comme un acte', () => {
+    const t = calculerLignes([visite()], contrat())
+    expect(t.nbActes).toBe(1)
+    expect(t.km).toBe(12)
+  })
+
+  it('additionne l acte et ses suppléments pour l affichage de la ligne', () => {
+    expect(montantTotalLigne(visite())).toBe(70.12)
+    expect(montantLigne(visite())).toBe(52.8)
   })
 })
 

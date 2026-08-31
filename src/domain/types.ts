@@ -127,6 +127,16 @@ export interface Ligne {
    * réécrit donc jamais une journée déjà passée.
    */
   tarifUnitaire: number
+  /**
+   * Ce qui se facture AVEC cet acte : indemnité de déplacement, kilomètres,
+   * majoration de dimanche. Ces éléments se comptent par acte et non par
+   * journée — trois visites à domicile, trois indemnités — et les rattacher
+   * évite de relire une journée éclatée en lignes indépendantes.
+   *
+   * Absent sur les journées saisies avant cette possibilité : elles gardent
+   * leurs indemnités en lignes séparées, qui restent parfaitement valables.
+   */
+  supplements?: Ligne[]
 }
 
 /** Une feuille journalière, pour une date et un contrat donnés. */

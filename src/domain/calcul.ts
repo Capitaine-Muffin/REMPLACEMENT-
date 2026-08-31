@@ -48,6 +48,18 @@ export function montantLigne(l: Ligne): number {
   return arrondi(l.quantite * l.tarifUnitaire)
 }
 
+/** Une ligne et ses suppléments, sur un même plan, pour les totaux. */
+export function aplatir(lignes: Ligne[]): Ligne[] {
+  return lignes.flatMap((l) => [l, ...(l.supplements ?? [])])
+}
+
+/** Ce que rapporte une ligne, suppléments compris. */
+export function montantTotalLigne(l: Ligne): number {
+  return arrondi(
+    montantLigne(l) + (l.supplements ?? []).reduce((s, x) => s + montantLigne(x), 0),
+  )
+}
+
 /** Somme des montants des lignes d'une catégorie donnee. */
 function sommeCategorie(lignes: Ligne[], categorie: Categorie): number {
   return arrondi(
@@ -67,7 +79,11 @@ export function calculerJournee(journee: Journee, contrat: Contrat | undefined):
   return calculerLignes(journee.lignes, contrat)
 }
 
-export function calculerLignes(lignes: Ligne[], contrat: Contrat | undefined): Totaux {
+export function calculerLignes(brutes: Ligne[], contrat: Contrat | undefined): Totaux {
+  // Un supplément compte dans sa propre catégorie, exactement comme s'il avait
+  // été saisi en ligne séparée : l'assiette de rétrocession ne change pas selon
+  // la façon dont la journée a été organisée à l'écran.
+  const lignes = aplatir(brutes)
   const actes = sommeCategorie(lignes, 'acte')
   const majorations = sommeCategorie(lignes, 'majoration')
   const id = sommeCategorie(lignes, 'id')

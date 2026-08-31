@@ -1,13 +1,14 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useStore } from '../store/AppStore'
 import {
-  calculerLignes, cotation, journeeVide, montantLigne, tarifApplique, tarifCatalogue,
+  calculerLignes, cotation, journeeVide, montantLigne, montantTotalLigne,
+  tarifApplique, tarifCatalogue,
 } from '../domain/calcul'
 import {
   aujourdhui, dateLongue, decalerJour, estDimanche, euros, versNombre,
 } from '../domain/format'
 import { nomFerie } from '../domain/feries'
-import type { ActeCatalogue, Groupe, Ligne } from '../domain/types'
+import type { ActeCatalogue, Contrat, Groupe, Ligne } from '../domain/types'
 import { CATEGORIES, GROUPES, categoriesDuGroupe } from '../domain/types'
 import { DetailTotaux } from '../components/Totaux'
 import { useConfirmation } from '../components/Confirmation'
@@ -211,9 +212,8 @@ export function PageJour() {
                 <LigneSaisie
                   key={l.id}
                   ligne={l}
-                  onQuantite={(q) => s.majLigne(journee!.id, l.id, { quantite: q })}
-                  onTarif={(t) => s.majLigne(journee!.id, l.id, { tarifUnitaire: t })}
-                  onSupprimer={() => s.supprimerLigne(journee!.id, l.id)}
+                  journeeId={journee!.id}
+                  contrat={contrat}
                 />
               ))}
             </div>
@@ -326,59 +326,65 @@ export function PageJour() {
 /* --- Une ligne de la feuille -------------------------------------------- */
 
 function LigneSaisie({
-  ligne, onQuantite, onTarif, onSupprimer,
+  ligne, journeeId, contrat,
 }: {
   ligne: Ligne
-  onQuantite: (q: number) => void
-  onTarif: (t: number) => void
-  onSupprimer: () => void
+  journeeId: string
+  contrat: Contrat
 }) {
+  const s = useStore()
   const [tarifOuvert, setTarifOuvert] = useState(false)
+  const [choixOuvert, setChoixOuvert] = useState(false)
   const km = ligne.categorie === 'ik'
-  const pas = km ? 1 : 1
+  const supplements = ligne.supplements ?? []
+  const lettres = s.donnees.lettresCles
+
+  // Ce qui peut se rattacher à un acte : déplacements et majorations. Un
+  // supplément n'en porte pas lui-même, sans quoi la lecture s'emboîterait.
+  const rattachables =
+    ligne.categorie === 'acte'
+      ? s.donnees.catalogue.filter((a) => !a.archive && a.categorie !== 'acte')
+      : []
+  const dejaLa = new Set(supplements.map((x) => x.acteId))
+  const favoris = rattachables.filter((a) => a.favori && !dejaLa.has(a.id))
+
+  const ajouter = (acte: ActeCatalogue) => {
+    s.ajouterSupplement(journeeId, ligne.id, {
+      acteId: acte.id,
+      code: cotation(acte, lettres),
+      libelle: acte.libelle,
+      categorie: acte.categorie,
+      quantite: acte.unite === 'km' ? 0 : 1,
+      tarifUnitaire: tarifApplique(acte, contrat, lettres),
+    })
+    setChoixOuvert(false)
+  }
 
   return (
     <div className="saisie">
       <div className="saisie-haut">
         <span className="titre">{ligne.libelle || ligne.code}</span>
-        <span className="montant">{euros(montantLigne(ligne))}</span>
+        <span className="montant">{euros(montantTotalLigne(ligne))}</span>
       </div>
 
       <div className="saisie-bas">
-        <div className="compteur">
-          <button
-            type="button" aria-label="Diminuer la quantité"
-            onClick={() => onQuantite(Math.max(0, ligne.quantite - pas))}
-          >
-            −
-          </button>
-          <input
-            type="number" inputMode="decimal" min={0} step={pas}
-            value={ligne.quantite}
-            aria-label={km ? 'Nombre de kilomètres' : "Nombre d'actes"}
-            onChange={(e) => onQuantite(versNombre(e.target.value))}
-          />
-          <button
-            type="button" aria-label="Augmenter la quantité"
-            onClick={() => onQuantite(ligne.quantite + pas)}
-          >
-            +
-          </button>
-        </div>
-
+        <Compteur
+          valeur={ligne.quantite}
+          km={km}
+          onChange={(q) => s.majLigne(journeeId, ligne.id, { quantite: q })}
+        />
         <button
           type="button" className="tarif-unitaire"
           onClick={() => setTarifOuvert((v) => !v)}
           title="Modifier le tarif de cette ligne"
         >
-          {/* La cotation vaut autant que le montant : c'est elle qu'on relit. */}
           {ligne.code && <strong>{ligne.code}</strong>}{' '}
           {km ? 'km ×' : '×'} {euros(ligne.tarifUnitaire)}
         </button>
-
         <button
           type="button" className="btn discret petit icone"
-          aria-label="Supprimer la ligne" onClick={onSupprimer}
+          aria-label="Supprimer la ligne"
+          onClick={() => s.supprimerLigne(journeeId, ligne.id)}
         >
           <IconeCorbeille />
         </button>
@@ -390,10 +396,115 @@ function LigneSaisie({
           <input
             type="number" inputMode="decimal" min={0} step={0.05}
             value={ligne.tarifUnitaire}
-            onChange={(e) => onTarif(versNombre(e.target.value))}
+            onChange={(e) =>
+              s.majLigne(journeeId, ligne.id, { tarifUnitaire: versNombre(e.target.value) })
+            }
           />
         </label>
       )}
+
+      {supplements.map((x) => (
+        <div className="supplement" key={x.id}>
+          <div className="supplement-haut">
+            <span className="supplement-nom">{x.libelle || x.code}</span>
+            <span className="supplement-montant">{euros(montantLigne(x))}</span>
+            <button
+              type="button" className="btn discret petit icone"
+              aria-label={`Retirer ${x.libelle}`}
+              onClick={() => s.supprimerSupplement(journeeId, ligne.id, x.id)}
+            >
+              <IconeCorbeille />
+            </button>
+          </div>
+          {/* Le kilométrage prend sa propre ligne : le mettre à côté du nom
+              forçait à tronquer « IK plaine » en « IK pl… ». */}
+          {x.categorie === 'ik' && (
+            <Compteur
+              petit km
+              valeur={x.quantite}
+              onChange={(q) => s.majSupplement(journeeId, ligne.id, x.id, { quantite: q })}
+            />
+          )}
+        </div>
+      ))}
+
+      {rattachables.length > 0 && (
+        <div className="puces saisie-puces">
+          {favoris.map((a) => (
+            <button key={a.id} type="button" className="puce" onClick={() => ajouter(a)}>
+              + {a.libelle}
+            </button>
+          ))}
+          <button
+            type="button" className="puce puce-plus"
+            aria-label="Ajouter un autre déplacement ou une majoration"
+            title="Autres déplacements et majorations"
+            onClick={() => setChoixOuvert(true)}
+          >
+            <IconePlus />
+          </button>
+        </div>
+      )}
+
+      <Modale
+        titre={`Ajouter à « ${ligne.libelle || ligne.code} »`}
+        ouverte={choixOuvert}
+        onFermer={() => setChoixOuvert(false)}
+      >
+        <div className="liste" style={{ margin: '0 -14px' }}>
+          {rattachables.map((a) => (
+            <button
+              key={a.id} type="button" className="ligne"
+              disabled={dejaLa.has(a.id)}
+              onClick={() => ajouter(a)}
+            >
+              <span className="principal-txt">
+                <span className="titre">{a.libelle || a.code}</span>
+                <span className="meta">
+                  {cotation(a, lettres)} ·{' '}
+                  {CATEGORIES.find((c) => c.value === a.categorie)?.court}
+                  {dejaLa.has(a.id) && ' · déjà ajouté'}
+                </span>
+              </span>
+              <span className="montant">
+                {euros(tarifCatalogue(a, lettres))}
+                {a.unite === 'km' && <span style={{ fontWeight: 500 }}> /km</span>}
+              </span>
+            </button>
+          ))}
+        </div>
+      </Modale>
+    </div>
+  )
+}
+
+/** Le sélecteur de quantité, partagé par une ligne et par ses suppléments. */
+function Compteur({
+  valeur, km, petit, onChange,
+}: {
+  valeur: number
+  km?: boolean
+  petit?: boolean
+  onChange: (v: number) => void
+}) {
+  return (
+    <div className={`compteur${petit ? ' petit' : ''}`}>
+      <button
+        type="button" aria-label="Diminuer la quantité"
+        onClick={() => onChange(Math.max(0, valeur - 1))}
+      >
+        −
+      </button>
+      <input
+        type="number" inputMode="decimal" min={0} step={1}
+        value={valeur}
+        aria-label={km ? 'Nombre de kilomètres' : "Nombre d'actes"}
+        onChange={(e) => onChange(versNombre(e.target.value))}
+      />
+      <button type="button" aria-label="Augmenter la quantité" onClick={() => onChange(valeur + 1)}>
+        +
+      </button>
+      {km && <span className="compteur-unite">km</span>}
     </div>
   )
 }

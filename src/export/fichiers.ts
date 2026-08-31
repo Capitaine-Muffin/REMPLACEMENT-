@@ -1,4 +1,6 @@
-import { calculerPeriode, montantLigne, ventilerParContrat, type Totaux } from '../domain/calcul'
+import {
+  aplatir, calculerPeriode, montantLigne, ventilerParContrat, type Totaux,
+} from '../domain/calcul'
 import { euros, libelleMois } from '../domain/format'
 import type { Contrat, DonneesApp, Journee } from '../domain/types'
 
@@ -35,7 +37,9 @@ export function exporterMoisCSV(mois: string, journees: Journee[], contrats: Con
 
   for (const j of [...journees].sort((a, b) => a.date.localeCompare(b.date))) {
     const nom = parId.get(j.contratId)?.nom ?? 'Contrat supprimé'
-    for (const l of j.lignes) {
+    // Les suppléments d'un acte sont exportés comme des lignes à part entière :
+    // le comptable attend une liste plate, pas une arborescence.
+    for (const l of aplatir(j.lignes)) {
       lignes.push(
         enLigne([
           j.date, nom, l.code, l.libelle, etiquettes[l.categorie] ?? l.categorie,

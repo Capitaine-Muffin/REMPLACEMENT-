@@ -457,6 +457,9 @@ dialog::backdrop { background: rgba(8, 12, 16, .5); }
 /* --- Ligne de saisie d'une journée -------------------------------------- */
 
 .saisie { padding: 10px 14px; display: grid; gap: 7px; }
+/* Sans cela, une pastille ou un supplément trop large élargit la grille et
+   fait déborder toute la carte au lieu de défiler dans sa propre rangée. */
+.saisie > * { min-width: 0; }
 
 .saisie-haut { display: flex; align-items: baseline; gap: 10px; }
 .saisie-haut .titre { flex: 1; min-width: 0; font-weight: 600; font-size: .9rem; overflow-wrap: anywhere; }
@@ -483,6 +486,39 @@ dialog::backdrop { background: rgba(8, 12, 16, .5); }
 }
 .compteur input::-webkit-outer-spin-button,
 .compteur input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+/* Version réduite, pour les kilomètres d'un supplément. */
+.compteur.petit button { width: 30px; min-height: 30px; font-size: 1rem; }
+.compteur.petit input { width: 42px; min-height: 30px; font-size: .82rem; }
+.compteur.petit .compteur-unite {
+  padding: 0 7px 0 4px;
+  font-size: .74rem; font-weight: 700; color: var(--texte-doux);
+}
+
+/* --- Suppléments rattachés à un acte ------------------------------------- */
+
+/* Décalés vers la droite et reliés par un filet : ils appartiennent à l'acte
+   au-dessus, ils n'en sont pas les égaux. */
+.supplement {
+  display: grid; gap: 5px; justify-items: start;
+  margin-left: 12px; padding: 5px 0 5px 12px;
+  border-left: 2px solid var(--bordure);
+}
+.supplement-haut { display: flex; align-items: center; gap: 8px; width: 100%; }
+.supplement-nom {
+  flex: 1; min-width: 0;
+  font-size: .82rem; font-weight: 600; color: var(--texte-doux);
+  overflow-wrap: anywhere;
+}
+.supplement-montant {
+  font-size: .84rem; font-weight: 700; font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.saisie-puces { margin-left: 12px; padding-top: 2px; }
+.saisie-puces .puce { font-size: .74rem; padding: 5px 9px; }
+.puce-plus { display: inline-grid; place-items: center; width: 30px; padding: 0; }
+.puce-plus svg { width: 15px; height: 15px; }
 
 .tarif-unitaire {
   flex: 1; min-width: 0;

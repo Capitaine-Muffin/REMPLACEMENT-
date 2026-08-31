@@ -34,6 +34,10 @@ interface Store {
   ajouterLigne: (date: string, contratId: string, ligne: Omit<Ligne, 'id'>) => void
   majLigne: (journeeId: string, ligneId: string, ligne: Partial<Ligne>) => void
   supprimerLigne: (journeeId: string, ligneId: string) => void
+  /* Suppléments rattachés à une ligne (déplacements, majorations) */
+  ajouterSupplement: (journeeId: string, ligneId: string, s: Omit<Ligne, 'id'>) => void
+  majSupplement: (journeeId: string, ligneId: string, supplementId: string, s: Partial<Ligne>) => void
+  supprimerSupplement: (journeeId: string, ligneId: string, supplementId: string) => void
   majNotesJournee: (journeeId: string, notes: string) => void
   supprimerJournee: (journeeId: string) => void
   dupliquerJournee: (journeeId: string, versDate: string) => void
@@ -270,6 +274,38 @@ export function FournisseurStore({
             if (!lignes.length && !j.notes?.trim()) return []
             return [{ ...j, lignes, updatedAt: new Date().toISOString() }]
           }),
+        })),
+      ajouterSupplement: (journeeId, ligneId, supplement) =>
+        majJournee(journeeId, (j) => ({
+          ...j,
+          lignes: j.lignes.map((l) =>
+            l.id === ligneId
+              ? { ...l, supplements: [...(l.supplements ?? []), { ...supplement, id: nouvelId('s') }] }
+              : l,
+          ),
+        })),
+      majSupplement: (journeeId, ligneId, supplementId, patch) =>
+        majJournee(journeeId, (j) => ({
+          ...j,
+          lignes: j.lignes.map((l) =>
+            l.id === ligneId
+              ? {
+                  ...l,
+                  supplements: (l.supplements ?? []).map((x) =>
+                    x.id === supplementId ? { ...x, ...patch } : x,
+                  ),
+                }
+              : l,
+          ),
+        })),
+      supprimerSupplement: (journeeId, ligneId, supplementId) =>
+        majJournee(journeeId, (j) => ({
+          ...j,
+          lignes: j.lignes.map((l) =>
+            l.id === ligneId
+              ? { ...l, supplements: (l.supplements ?? []).filter((x) => x.id !== supplementId) }
+              : l,
+          ),
         })),
       majNotesJournee: (journeeId, notes) => majJournee(journeeId, (j) => ({ ...j, notes })),
       supprimerJournee: (journeeId) =>
