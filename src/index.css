@@ -461,9 +461,12 @@ dialog::backdrop { background: rgba(8, 12, 16, .5); }
    fait déborder toute la carte au lieu de défiler dans sa propre rangée. */
 .saisie > * { min-width: 0; }
 
-.saisie-haut { display: flex; align-items: baseline; gap: 10px; }
+.saisie-haut { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 10px; }
 .saisie-haut .titre { flex: 1; min-width: 0; font-weight: 600; font-size: .9rem; overflow-wrap: anywhere; }
-.saisie-haut .montant { font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.saisie-haut .montant {
+  margin-left: auto;
+  font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap;
+}
 
 .saisie-bas { display: flex; align-items: center; gap: 8px; }
 
@@ -522,7 +525,12 @@ dialog::backdrop { background: rgba(8, 12, 16, .5); }
 
 /* Bascule d'un acte associé : barrée tant qu'il n'est pas coté, en accent
    dès qu'il l'est. L'état se lit sans avoir à chercher ailleurs. */
-.puce-associe { border-style: dashed; text-decoration: line-through; }
+.puce-associe {
+  flex: none;
+  padding: 4px 9px;
+  font-size: .72rem;
+  border-style: dashed; text-decoration: line-through;
+}
 .puce-associe.pose {
   background: var(--accent-doux); border-color: var(--accent-doux);
   border-style: solid; color: var(--accent-texte);
