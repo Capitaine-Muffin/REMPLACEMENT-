@@ -15,8 +15,8 @@ import { useConfirmation } from '../components/Confirmation'
 import { Modale } from '../components/Modale'
 import { ChoixDate } from '../components/ChoixDate'
 import {
-  IconeAlerte, IconeCopie, IconeCorbeille, IconeDroite, IconeGauche, IconePlus,
-  IconeValide,
+  IconeAlerte, IconeCopie, IconeCorbeille, IconeDroite, IconeGauche, IconeInfo,
+  IconePlus, IconeValide,
 } from '../components/Icones'
 import { useRepli } from '../store/repli'
 import { BasculeSection } from '../components/BasculeSection'
@@ -335,6 +335,7 @@ function LigneSaisie({
   const s = useStore()
   const [tarifOuvert, setTarifOuvert] = useState(false)
   const [choixOuvert, setChoixOuvert] = useState(false)
+  const [aideOuverte, setAideOuverte] = useState(false)
   const km = ligne.categorie === 'ik'
   const supplements = ligne.supplements ?? []
   const lettres = s.donnees.lettresCles
@@ -450,14 +451,51 @@ function LigneSaisie({
           >
             <IconePlus />
           </button>
+          <button
+            type="button" className="puce-aide"
+            aria-label="D'où viennent ces pastilles ?"
+            title="D'où viennent ces pastilles ?"
+            onClick={() => setAideOuverte(true)}
+          >
+            <IconeInfo />
+          </button>
         </div>
       )}
+
+      <Modale
+        titre="D'où viennent ces pastilles ?"
+        ouverte={aideOuverte}
+        onFermer={() => setAideOuverte(false)}
+      >
+        <p style={{ margin: 0, fontSize: '.88rem', lineHeight: 1.55 }}>
+          Les pastilles reprennent les déplacements et majorations que tu as mis
+          en <strong>favori</strong>. Elles t'évitent d'ouvrir une liste pour ce
+          que tu ajoutes tous les jours.
+        </p>
+        <p style={{ margin: 0, fontSize: '.88rem', lineHeight: 1.55 }}>
+          Pour en ajouter une ou en retirer une : va dans l'onglet{' '}
+          <strong>Tarifs</strong>, choisis Déplacements ou Majorations, et touche
+          l'<strong>étoile</strong> à gauche de l'élément. Une étoile pleine
+          donne une pastille ici.
+        </p>
+        <p style={{ margin: 0, fontSize: '.88rem', lineHeight: 1.55 }}>
+          Le bouton <strong>+</strong> ouvre la liste complète, pour un élément
+          dont tu as besoin une fois sans vouloir le mettre en favori.
+        </p>
+      </Modale>
 
       <Modale
         titre={`Ajouter à « ${ligne.libelle || ligne.code} »`}
         ouverte={choixOuvert}
         onFermer={() => setChoixOuvert(false)}
       >
+        <div className="note info">
+          <IconeInfo />
+          <span>
+            Mets un élément en favori dans l'onglet Tarifs pour l'avoir en
+            pastille, sans passer par cette liste.
+          </span>
+        </div>
         <div className="liste" style={{ margin: '0 -14px' }}>
           {rattachables.map((a) => (
             <button
