@@ -26,17 +26,32 @@ export const CATEGORIES: { value: Categorie; label: string; court: string }[] = 
  * — « je me suis déplacée » — et tiennent donc dans un seul onglet, même si
  * elles restent distinctes dans les totaux et dans les règles du contrat.
  */
-export type Groupe = 'acte' | 'majoration' | 'deplacement'
+export type Groupe = 'acte' | 'echographie' | 'ivg' | 'majoration' | 'deplacement'
 
-export const GROUPES: { value: Groupe; court: string; categories: Categorie[] }[] = [
-  { value: 'acte', court: 'Actes', categories: ['acte'] },
-  { value: 'majoration', court: 'Majorations', categories: ['majoration'] },
-  { value: 'deplacement', court: 'Déplacements', categories: ['id', 'ik'] },
+export const GROUPES: {
+  value: Groupe
+  court: string
+  /** Catégorie donnée à un acte créé depuis cet onglet. */
+  categorie: Categorie
+  contient: (a: Pick<ActeCatalogue, 'categorie' | 'famille'>) => boolean
+}[] = [
+  { value: 'acte', court: 'Actes', categorie: 'acte', contient: (a) => a.categorie === 'acte' && !a.famille },
+  { value: 'echographie', court: 'Échographies', categorie: 'acte', contient: (a) => a.famille === 'echographie' },
+  { value: 'ivg', court: 'IVG', categorie: 'acte', contient: (a) => a.famille === 'ivg' },
+  { value: 'majoration', court: 'Majorations', categorie: 'majoration', contient: (a) => a.categorie === 'majoration' },
+  { value: 'deplacement', court: 'Déplacements', categorie: 'id', contient: (a) => a.categorie === 'id' || a.categorie === 'ik' },
 ]
 
-/** Catégories couvertes par un onglet. */
-export const categoriesDuGroupe = (groupe: Groupe): Categorie[] =>
-  GROUPES.find((g) => g.value === groupe)?.categories ?? []
+const groupe = (v: Groupe) => GROUPES.find((g) => g.value === v)
+
+/** Vrai si l'acte appartient à l'onglet. */
+export const dansLeGroupe = (
+  v: Groupe,
+  acte: Pick<ActeCatalogue, 'categorie' | 'famille'>,
+): boolean => groupe(v)?.contient(acte) ?? false
+
+/** Catégorie à donner à un acte créé depuis cet onglet. */
+export const categorieDuGroupe = (v: Groupe): Categorie => groupe(v)?.categorie ?? 'acte'
 
 /**
  * Une lettre clé de la NGAP (SF, SP...). Sa valeur est fixée par la convention
@@ -63,6 +78,12 @@ export interface ActeCatalogue {
   code: string
   libelle: string
   categorie: Categorie
+  /**
+   * Sous-ensemble du catalogue, pour la navigation seulement : les
+   * échographies et les actes du forfait IVG restent des actes cotés, mais
+   * les mélanger aux consultations rendrait la liste illisible.
+   */
+  famille?: 'echographie' | 'ivg'
   tarification: Tarification
   /** Cotation au coefficient : quelle lettre clé, et quel coefficient. */
   lettreCleId?: string
@@ -181,4 +202,4 @@ export interface DonneesApp {
   journees: Journee[]
 }
 
-export const VERSION_DONNEES = 7
+export const VERSION_DONNEES = 8

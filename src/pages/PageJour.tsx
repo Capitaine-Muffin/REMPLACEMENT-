@@ -9,7 +9,7 @@ import {
 } from '../domain/format'
 import { nomFerie } from '../domain/feries'
 import type { ActeCatalogue, Contrat, Groupe, Ligne } from '../domain/types'
-import { CATEGORIES, GROUPES, categoriesDuGroupe } from '../domain/types'
+import { CATEGORIES, GROUPES, dansLeGroupe } from '../domain/types'
 import { DetailTotaux } from '../components/Totaux'
 import { useConfirmation } from '../components/Confirmation'
 import { Modale } from '../components/Modale'
@@ -588,7 +588,7 @@ function ChoixActe({
       )
     : groupe === 'favoris'
       ? disponibles.filter((a) => a.favori)
-      : disponibles.filter((a) => categoriesDuGroupe(groupe).includes(a.categorie))
+      : disponibles.filter((a) => dansLeGroupe(groupe, a))
 
   return (
     <Modale

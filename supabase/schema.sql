@@ -13,7 +13,7 @@ create extension if not exists "pgcrypto";
 -- Réglages generaux de l'utilisatrice ------------------------------------------
 create table if not exists public.profils (
   user_id    uuid primary key references auth.users (id) on delete cascade,
-  version    integer not null default 7,
+  version    integer not null default 8,
   reglages   jsonb not null default '{}'::jsonb,
   updated_at timestamptz not null default now()
 );
@@ -59,6 +59,8 @@ create table if not exists public.actes (
   code         text not null,
   libelle      text not null,
   categorie    text not null check (categorie in ('acte', 'majoration', 'id', 'ik')),
+  -- Sous-ensemble pour la navigation seulement : echographies, forfait IVG.
+  famille      text check (famille in ('echographie', 'ivg')),
   -- 'coefficient' : lettre cle x coefficient. 'forfait' : montant fixe.
   tarification text not null default 'forfait'
                check (tarification in ('coefficient', 'forfait')),

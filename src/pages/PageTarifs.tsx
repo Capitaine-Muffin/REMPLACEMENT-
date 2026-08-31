@@ -4,7 +4,7 @@ import { cotation, tarifCatalogue } from '../domain/calcul'
 import { euros, versNombre } from '../domain/format'
 import { aVerifier } from '../domain/catalogue'
 import type { ActeCatalogue, Categorie, Groupe, LettreCle } from '../domain/types'
-import { CATEGORIES, GROUPES, categoriesDuGroupe } from '../domain/types'
+import { CATEGORIES, GROUPES, categorieDuGroupe, dansLeGroupe } from '../domain/types'
 import { useConfirmation } from '../components/Confirmation'
 import { IconeCorbeille, IconeEtoile, IconeInfo, IconePlus } from '../components/Icones'
 
@@ -21,7 +21,7 @@ export function PageTarifs() {
     .filter((a) => {
       if (q) return true
       if (groupe === 'miens') return a.personnalise
-      return categoriesDuGroupe(groupe).includes(a.categorie)
+      return dansLeGroupe(groupe, a)
     })
     .filter((a) => !q || a.libelle.toLowerCase().includes(q) || a.code.toLowerCase().includes(q))
 
@@ -81,8 +81,7 @@ export function PageTarifs() {
               // catégorie : un acte créé depuis là est un acte coté.
               // « Mes actes » ne désigne pas une catégorie : un acte créé
               // depuis là est un acte coté.
-              categorie:
-                q || groupe === 'miens' ? 'acte' : (categoriesDuGroupe(groupe)[0] ?? 'acte'),
+              categorie: q || groupe === 'miens' ? 'acte' : categorieDuGroupe(groupe),
               libelle: 'Nouvel acte',
             })
           }

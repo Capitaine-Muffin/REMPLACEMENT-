@@ -81,58 +81,27 @@ jamais le passé.
 Certains montants ne suivent pas de coefficient (consultation, majorations,
 IFD, IK) : ceux-là sont saisis en montant fixe, et se modifient directement.
 
-## Chaque montant porte son origine
+## D'où viennent les tarifs
 
-Aucun chiffre n'entre dans le catalogue sans sa provenance : elle est stockée
-avec l'acte (`source`) et affichée dans l'appli. Rien n'est déduit, arrondi ni
-reconstitué — soit un montant vient d'une sage-femme, soit d'une source citée,
-soit il n'y est pas.
+Le catalogue livré — 76 actes — provient intégralement de la grille de l'ONSSF
+*« Les actes et cotations des sages-femmes en NGAP et CCAM en métropole »*,
+avenant 7 applicable au 22/02/2024. Aucun montant n'est déduit, arrondi ni
+reconstitué : chaque acte porte sa provenance, consultable en l'ouvrant.
 
-En ouvrant un acte, tu lis d'où vient son montant. S'il n'a pas encore été
-vérifié, deux gestes suffisent : corriger la valeur, ou appuyer sur « Marquer
-comme vérifié » si elle est juste. Dans les deux cas la source devient
-« Vérifié par toi », et la valeur est alors conservée telle quelle lors des
-mises à jour de l'application.
+**La seule valeur qui en diffère** est celle des lettres clés SF et SP, à
+3,10 € sur cette grille de février 2024 et portées à **3,20 €** au 1ᵉʳ janvier
+2025 par la seconde étape du même avenant. C'est aussi le seul chiffre à
+reprendre lors d'une revalorisation : les 30 actes cotés au coefficient
+suivent d'eux-mêmes.
 
-**Confirmé par une sage-femme en exercice** — affiché sans mention :
+Corriger un montant, ou appuyer sur « Marquer comme vérifié », le protège des
+mises à jour ultérieures du catalogue livré.
 
-| Acte | Cotation |
-| --- | --- |
-| Rééducation périnéale | SF 7,5 |
-| Visite à domicile, 2 premières (grossesse simple) | SF 16,5 |
-| Visite à domicile, suivantes (12 premiers jours) | SF 12 |
-| Visite à domicile, 2 premières (grossesse gémellaire) | SF 22,6 |
-| Indemnité de déplacement (MD) | 10 € |
+### Une règle inscrite dans le catalogue
 
-**Issu de recherches, non confirmé** : consultation, MSF, majorations
-dimanche/férié et de nuit, IK, et tous les actes CCAM. Leur provenance est
-écrite sous chacun d'eux.
-
-Les actes CCAM (frottis JKHD001, pose de DIU JKLD001, changement JKKD001,
-ablation JKGD001, pose d'implant QZLA004, retrait d'implant QZGA002) sont
-livrés avec leur code — stable d'une source à l'autre — mais leurs montants
-divergent selon les sources, d'où la mention.
-
-Une consultation avec frottis se note en plusieurs lignes (C + MSF, puis l'acte
-CCAM) : la liste d'ajout reste ouverte pour les enchaîner d'un seul geste.
-
-## Les suppléments d'un acte
-
-Une indemnité de déplacement, des kilomètres ou une majoration de dimanche se
-comptent **par acte** et non par journée : trois visites à domicile, trois
-indemnités. Ils se rattachent donc à l'acte, par des pastilles placées sous
-lui, et la ligne affiche son total complet — une visite à domicile est une
-ligne, pas trois.
-
-Le rattachement ne change rien aux calculs : chaque supplément compte dans sa
-propre catégorie, exactement comme s'il avait été saisi séparément, et
-l'assiette de rétrocession ne dépend jamais de la façon dont la journée a été
-organisée à l'écran. Les journées saisies avant cette possibilité gardent leurs
-indemnités en lignes séparées, qui restent valables.
-
-Les lettres clés SF et SP sont à 3,20 € (avenant 7, 1ᵉʳ janvier 2025). La source
-qui fait foi reste la page des tarifs conventionnels d'ameli.fr pour les
-sages-femmes.
+Le MD ne se cumule ni avec F, ni avec N, ni avec MM : il faut alors prendre
+MDD, MDN ou MDI selon l'heure. La note figure sur les quatre lignes
+concernées, là où la question se pose.
 
 ## Vie privée
 
