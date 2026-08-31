@@ -349,6 +349,14 @@ function LigneSaisie({
   const dejaLa = new Set(supplements.map((x) => x.acteId))
   const favoris = rattachables.filter((a) => a.favori && !dejaLa.has(a.id))
 
+  // Les actes qui se cotent avec celui-ci : ils s'ajoutent ou se retirent d'un
+  // seul appui, sans quantité à régler, donc en bascule plutôt qu'en ligne.
+  const associes = ligne.acteId
+    ? s.donnees.catalogue.filter((a) => !a.archive && a.avec?.includes(ligne.acteId!))
+    : []
+  const estAssocie = (x: Ligne) => associes.some((a) => a.id === x.acteId)
+  const supplementDe = (acteId: string) => supplements.find((x) => x.acteId === acteId)
+
   const ajouter = (acte: ActeCatalogue) => {
     s.ajouterSupplement(journeeId, ligne.id, {
       acteId: acte.id,
@@ -404,7 +412,7 @@ function LigneSaisie({
         </label>
       )}
 
-      {supplements.map((x) => (
+      {supplements.filter((x) => !estAssocie(x)).map((x) => (
         <div className="supplement" key={x.id}>
           <div className="supplement-haut">
             <span className="supplement-nom">{x.libelle || x.code}</span>
@@ -429,8 +437,27 @@ function LigneSaisie({
         </div>
       ))}
 
-      {rattachables.length > 0 && (
+      {(rattachables.length > 0 || associes.length > 0) && (
         <div className="puces saisie-puces">
+          {associes.map((a) => {
+            const pose = supplementDe(a.id)
+            return (
+              <button
+                key={a.id} type="button"
+                className={`puce puce-associe${pose ? ' pose' : ''}`}
+                aria-pressed={Boolean(pose)}
+                title={`${a.libelle} — ${euros(tarifCatalogue(a, lettres))}`}
+                onClick={() =>
+                  pose
+                    ? s.supprimerSupplement(journeeId, ligne.id, pose.id)
+                    : ajouter(a)
+                }
+              >
+                {a.court ?? a.libelle}
+                {pose && <span className="puce-montant">{euros(montantLigne(pose))}</span>}
+              </button>
+            )
+          })}
           {/* Le sigle suffit sur le bouton : ces codes sont le vocabulaire
               quotidien, et le nom complet apparaît dès que l'élément est
               ajouté, sur la ligne en dessous. */}

@@ -88,6 +88,14 @@ export interface ActeCatalogue {
   /** Cotation au coefficient : quelle lettre clé, et quel coefficient. */
   lettreCleId?: string
   coefficient?: number
+  /**
+   * Actes avec lesquels celui-ci se cote habituellement. Il apparaît alors en
+   * bascule sous eux : un prélèvement cervico-vaginal ne se facture jamais
+   * seul, toujours avec une consultation.
+   */
+  avec?: string[]
+  /** Nom court, pour les bascules où la place manque. */
+  court?: string
   /** Montant fixe. Utilisé uniquement quand tarification vaut 'forfait'. */
   tarif: number
   /** Unité de la quantité : un acte, ou un kilomètre pour les IK. */
@@ -202,4 +210,4 @@ export interface DonneesApp {
   journees: Journee[]
 }
 
-export const VERSION_DONNEES = 8
+export const VERSION_DONNEES = 9

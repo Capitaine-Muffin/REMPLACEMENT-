@@ -520,6 +520,16 @@ dialog::backdrop { background: rgba(8, 12, 16, .5); }
 .puce-plus { display: inline-grid; place-items: center; width: 30px; padding: 0; }
 .puce-plus svg { width: 15px; height: 15px; }
 
+/* Bascule d'un acte associé : barrée tant qu'il n'est pas coté, en accent
+   dès qu'il l'est. L'état se lit sans avoir à chercher ailleurs. */
+.puce-associe { border-style: dashed; text-decoration: line-through; }
+.puce-associe.pose {
+  background: var(--accent-doux); border-color: var(--accent-doux);
+  border-style: solid; color: var(--accent-texte);
+  text-decoration: none;
+}
+.puce-associe .puce-montant { opacity: 1; }
+
 /* Discret, sans contour : c'est une explication, pas une action de saisie. */
 .puce-aide {
   flex: none;

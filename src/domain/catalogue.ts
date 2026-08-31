@@ -44,6 +44,10 @@ interface Defaut {
   forfait?: number
   /** Sous-ensemble du catalogue, pour la navigation seulement. */
   famille?: ActeCatalogue['famille']
+  /** Actes avec lesquels celui-ci se cote habituellement. */
+  avec?: string[]
+  /** Nom court, pour les bascules où la place manque. */
+  court?: string
   unite?: 'acte' | 'km'
   favori?: boolean
   note?: string
@@ -138,7 +142,13 @@ const DEFAUTS: Defaut[] = [
   { id: 'ccam-retrait-implant', code: 'QZGA002', libelle: "Ablation ou changement d'implant", categorie: 'acte', forfait: 41.8, favori: true },
   { id: 'ccam-pose-diu', code: 'JKLD001', libelle: "Pose d'un DIU", categorie: 'acte', forfait: 38.4, favori: true },
   { id: 'ccam-changement-diu', code: 'JKKD001', libelle: "Changement d'un DIU", categorie: 'acte', forfait: 38.4 },
-  { id: 'ccam-frottis', code: 'JKHD001', libelle: 'Prélèvement cervico-vaginal', categorie: 'acte', forfait: 12.46, favori: true },
+  {
+    id: 'ccam-frottis', code: 'JKHD001', libelle: 'Prélèvement cervico-vaginal',
+    categorie: 'acte', forfait: 12.46, favori: true,
+    // Il ne se facture jamais seul : il apparaît en bascule sous la
+    // consultation, tout en restant cotable à part.
+    avec: ['def-consultation'], court: 'Frottis',
+  },
 
   // --- Échographies --------------------------------------------------------
   { id: 'echo-petit-bassin-ovulation', code: 'ZCQM007', libelle: "Échographie du petit bassin, surveillance de l'ovulation", categorie: 'acte', forfait: 37.8, famille: 'echographie' },
@@ -179,6 +189,8 @@ export function catalogueParDefaut(): ActeCatalogue[] {
     libelle: d.libelle,
     categorie: d.categorie,
     famille: d.famille,
+    avec: d.avec,
+    court: d.court,
     tarification: d.cotation ? 'coefficient' : 'forfait',
     lettreCleId: d.cotation?.[0],
     coefficient: d.cotation?.[1],

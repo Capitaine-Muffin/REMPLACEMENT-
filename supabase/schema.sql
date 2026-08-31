@@ -13,7 +13,7 @@ create extension if not exists "pgcrypto";
 -- Réglages generaux de l'utilisatrice ------------------------------------------
 create table if not exists public.profils (
   user_id    uuid primary key references auth.users (id) on delete cascade,
-  version    integer not null default 8,
+  version    integer not null default 9,
   reglages   jsonb not null default '{}'::jsonb,
   updated_at timestamptz not null default now()
 );
@@ -65,6 +65,8 @@ create table if not exists public.actes (
   tarification text not null default 'forfait'
                check (tarification in ('coefficient', 'forfait')),
   lettre_cle_id text,
+  -- Actes avec lesquels celui-ci se cote habituellement.
+  avec         text[],
   coefficient   numeric(10, 3),
   tarif        numeric(10, 2) not null default 0,
   -- Une cotation au coefficient doit designer une lettre cle, un forfait non.
