@@ -430,9 +430,16 @@ function LigneSaisie({
 
       {rattachables.length > 0 && (
         <div className="puces saisie-puces">
+          {/* Le sigle suffit sur le bouton : ces codes sont le vocabulaire
+              quotidien, et le nom complet apparaît dès que l'élément est
+              ajouté, sur la ligne en dessous. */}
           {favoris.map((a) => (
-            <button key={a.id} type="button" className="puce" onClick={() => ajouter(a)}>
-              + {a.libelle}
+            <button
+              key={a.id} type="button" className="puce"
+              title={a.libelle} aria-label={`Ajouter ${a.libelle}`}
+              onClick={() => ajouter(a)}
+            >
+              + {cotation(a, lettres)}
             </button>
           ))}
           <button
