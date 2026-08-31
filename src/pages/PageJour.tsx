@@ -453,8 +453,8 @@ function LigneSaisie({
           </button>
           <button
             type="button" className="puce-aide"
-            aria-label="D'où viennent ces pastilles ?"
-            title="D'où viennent ces pastilles ?"
+            aria-label="À quoi servent ces raccourcis ?"
+            title="À quoi servent ces raccourcis ?"
             onClick={() => setAideOuverte(true)}
           >
             <IconeInfo />
@@ -463,24 +463,13 @@ function LigneSaisie({
       )}
 
       <Modale
-        titre="D'où viennent ces pastilles ?"
+        titre="Les raccourcis"
         ouverte={aideOuverte}
         onFermer={() => setAideOuverte(false)}
       >
-        <p style={{ margin: 0, fontSize: '.88rem', lineHeight: 1.55 }}>
-          Les pastilles reprennent les déplacements et majorations que tu as mis
-          en <strong>favori</strong>. Elles t'évitent d'ouvrir une liste pour ce
-          que tu ajoutes tous les jours.
-        </p>
-        <p style={{ margin: 0, fontSize: '.88rem', lineHeight: 1.55 }}>
-          Pour en ajouter une ou en retirer une : va dans l'onglet{' '}
-          <strong>Tarifs</strong>, choisis Déplacements ou Majorations, et touche
-          l'<strong>étoile</strong> à gauche de l'élément. Une étoile pleine
-          donne une pastille ici.
-        </p>
-        <p style={{ margin: 0, fontSize: '.88rem', lineHeight: 1.55 }}>
-          Le bouton <strong>+</strong> ouvre la liste complète, pour un élément
-          dont tu as besoin une fois sans vouloir le mettre en favori.
+        <p style={{ margin: 0, fontSize: '.9rem', lineHeight: 1.55 }}>
+          Ajoute une indemnité en favori dans l'onglet <strong>Tarifs</strong>{' '}
+          pour qu'elle apparaisse dans tes raccourcis.
         </p>
       </Modale>
 
@@ -491,10 +480,7 @@ function LigneSaisie({
       >
         <div className="note info">
           <IconeInfo />
-          <span>
-            Mets un élément en favori dans l'onglet Tarifs pour l'avoir en
-            pastille, sans passer par cette liste.
-          </span>
+          <span>Mets-le en favori dans l'onglet Tarifs pour l'avoir en raccourci.</span>
         </div>
         <div className="liste" style={{ margin: '0 -14px' }}>
           {rattachables.map((a) => (
