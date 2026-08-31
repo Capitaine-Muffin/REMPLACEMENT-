@@ -1,6 +1,6 @@
 import type { Totaux } from '../domain/calcul'
 import type { Contrat } from '../domain/types'
-import { euros, pourcent } from '../domain/format'
+import { euros, nombre, pourcent } from '../domain/format'
 
 /**
  * Détail du calcul, dans l'ordre de la feuille papier :
@@ -20,7 +20,12 @@ export function DetailTotaux({
 
   return (
     <div className="totaux">
-      <Poste libelle="Actes cotés" valeur={totaux.actes} />
+      {/* Le nombre d'actes compte autant que leur montant : c'est lui qu'on
+          rapproche de son agenda pour vérifier qu'on n'a rien oublié. */}
+      <Poste
+        libelle={totaux.nbActes > 0 ? `Actes cotés (${nombre(totaux.nbActes)})` : 'Actes cotés'}
+        valeur={totaux.actes}
+      />
       {totaux.majorations > 0 && (
         <Poste libelle="Majorations (férié, nuit)" valeur={totaux.majorations} horsAssiette={!a.majorations} />
       )}
@@ -28,7 +33,11 @@ export function DetailTotaux({
         <Poste libelle="Indemnités de déplacement" valeur={totaux.id} horsAssiette={!a.id} />
       )}
       {totaux.ik > 0 && (
-        <Poste libelle="Indemnités kilométriques" valeur={totaux.ik} horsAssiette={!a.ik} />
+        <Poste
+          libelle={`Indemnités kilométriques (${nombre(totaux.km)} km)`}
+          valeur={totaux.ik}
+          horsAssiette={!a.ik}
+        />
       )}
 
       <div className="total-ligne somme">

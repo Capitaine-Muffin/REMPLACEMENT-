@@ -43,14 +43,14 @@ export function migrer(brut: unknown): DonneesApp {
   const base = donneesInitiales()
   if (!brut || typeof brut !== 'object') return base
   const d = brut as Partial<DonneesApp>
-  const catalogue = migrerCatalogue(d, base)
+  const { catalogue, correspondances } = migrerCatalogue(d, base)
 
   return {
     version: VERSION_DONNEES,
     reglages: { ...base.reglages, ...(d.reglages ?? {}) },
     lettresCles:
       Array.isArray(d.lettresCles) && d.lettresCles.length ? d.lettresCles : base.lettresCles,
-    contrats: migrerContrats(d, base, catalogue),
+    contrats: migrerContrats(d, base, catalogue, correspondances),
     catalogue,
     // Les journées gardent leurs montants : une revalorisation ne réécrit
     // jamais une feuille déjà remplie. On écarte en revanche les feuilles
@@ -60,6 +60,13 @@ export function migrer(brut: unknown): DonneesApp {
       : [],
   }
 }
+
+/**
+ * Le libellé, réduit à sa forme comparable : c'est lui qui identifie un acte
+ * aux yeux de l'utilisatrice, indépendamment des identifiants internes.
+ */
+const cleLibelle = (libelle: string) =>
+  libelle.trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
 
 /**
  * Le catalogue livré évolue à chaque correction de cotation. Il est donc repris
@@ -76,15 +83,31 @@ export function migrer(brut: unknown): DonneesApp {
  * Les journées déjà saisies ne dépendent d'aucun de ces identifiants : chaque
  * ligne porte son propre libellé, sa cotation et son tarif.
  */
-function migrerCatalogue(d: Partial<DonneesApp>, base: DonneesApp): ActeCatalogue[] {
-  if (!Array.isArray(d.catalogue) || !d.catalogue.length) return base.catalogue
-  if ((d.version ?? 1) >= VERSION_DONNEES) return d.catalogue
+function migrerCatalogue(
+  d: Partial<DonneesApp>,
+  base: DonneesApp,
+): { catalogue: ActeCatalogue[]; correspondances: Map<string, string> } {
+  const correspondances = new Map<string, string>()
+  if (!Array.isArray(d.catalogue) || !d.catalogue.length) {
+    return { catalogue: base.catalogue, correspondances }
+  }
+  if ((d.version ?? 1) >= VERSION_DONNEES) {
+    return { catalogue: d.catalogue, correspondances }
+  }
 
   const anciens = new Map(d.catalogue.map((a) => [a.id, a]))
+  // Les identifiants du catalogue livré ont déjà changé une fois. Le libellé
+  // sert donc de second point de reconnaissance : sans lui, un acte dont
+  // l'identifiant a changé était conservé À CÔTÉ de son remplaçant, et se
+  // retrouvait en double dans la liste.
+  const parLibelle = new Map(d.catalogue.map((a) => [cleLibelle(a.libelle), a]))
+  const reconnus = new Set<string>()
 
   const fournis = base.catalogue.map<ActeCatalogue>((neuf) => {
-    const ancien = anciens.get(neuf.id)
+    const ancien = anciens.get(neuf.id) ?? parLibelle.get(cleLibelle(neuf.libelle))
     if (!ancien) return neuf
+    reconnus.add(ancien.id)
+    correspondances.set(ancien.id, neuf.id)
     const sien = ancien.verifie === true
     return {
       ...neuf,
@@ -103,9 +126,17 @@ function migrerCatalogue(d: Partial<DonneesApp>, base: DonneesApp): ActeCatalogu
     }
   })
 
-  const fournisIds = new Set(base.catalogue.map((a) => a.id))
+  // Un acte portant le libellé d'un acte livré est le même acte, quel que soit
+  // son identifiant : le garder à côté produirait le doublon qu'on répare ici.
+  const libellesFournis = new Set(base.catalogue.map((a) => cleLibelle(a.libelle)))
+
   const conserves = d.catalogue
-    .filter((a) => !fournisIds.has(a.id) && (a.personnalise || a.verifie === true))
+    .filter(
+      (a) =>
+        !reconnus.has(a.id) &&
+        !libellesFournis.has(cleLibelle(a.libelle)) &&
+        (a.personnalise || a.verifie === true),
+    )
     .map<ActeCatalogue>((a) => ({
       ...a,
       tarification: a.tarification ?? 'forfait',
@@ -114,14 +145,20 @@ function migrerCatalogue(d: Partial<DonneesApp>, base: DonneesApp): ActeCatalogu
       personnalise: true,
     }))
 
-  return [...fournis, ...conserves]
+  return { catalogue: [...fournis, ...conserves], correspondances }
 }
 
 /**
- * Un tarif de contrat qui vise un acte disparu du catalogue ne désigne plus
- * rien : il est retiré plutôt que laissé à traîner.
+ * Les dépassements d'honoraires suivent leur acte quand son identifiant change.
+ * Ceux qui visent un acte disparu du catalogue ne désignent plus rien et sont
+ * retirés plutôt que laissés à traîner.
  */
-function migrerContrats(d: Partial<DonneesApp>, base: DonneesApp, catalogue: ActeCatalogue[]): Contrat[] {
+function migrerContrats(
+  d: Partial<DonneesApp>,
+  base: DonneesApp,
+  catalogue: ActeCatalogue[],
+  correspondances: Map<string, string>,
+): Contrat[] {
   if (!Array.isArray(d.contrats) || !d.contrats.length) return base.contrats
   if ((d.version ?? 1) >= VERSION_DONNEES) return d.contrats
 
@@ -132,7 +169,9 @@ function migrerContrats(d: Partial<DonneesApp>, base: DonneesApp, catalogue: Act
     // de la feuille du jour. Renommé s'il n'a jamais été personnalisé.
     nom: c.nom === 'Mon premier contrat' ? 'Contrat 1' : c.nom,
     tarifs: Object.fromEntries(
-      Object.entries(c.tarifs ?? {}).filter(([acteId]) => connus.has(acteId)),
+      Object.entries(c.tarifs ?? {})
+        .map(([acteId, tarif]) => [correspondances.get(acteId) ?? acteId, tarif] as const)
+        .filter(([acteId]) => connus.has(acteId)),
     ),
   }))
 }
