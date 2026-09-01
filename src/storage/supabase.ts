@@ -54,9 +54,9 @@ export class DepotSupabase implements Depot {
     return migrer({
       version: profil.data?.version ?? VERSION_DONNEES,
       reglages: profil.data?.reglages,
-      lettresCles: (lettres.data ?? []).map(versLettre),
-      contrats: (contrats.data ?? []).map(versContrat),
-      catalogue: (actes.data ?? []).map(versActe),
+      lettresCles: parOrdre(lettres.data ?? []).map(versLettre),
+      contrats: parOrdre(contrats.data ?? []).map(versContrat),
+      catalogue: parOrdre(actes.data ?? []).map(versActe),
       journees: (journees.data ?? []).map(versJournee),
     })
   }
@@ -65,9 +65,9 @@ export class DepotSupabase implements Depot {
     const u = this.userId
     const resultats = await Promise.all([
       this.client.from('profils').upsert({ user_id: u, version: d.version, reglages: d.reglages }),
-      this.client.from('lettres_cles').upsert(d.lettresCles.map((l) => ({ ...depuisLettre(l), user_id: u }))),
-      this.client.from('contrats').upsert(d.contrats.map((c) => ({ ...depuisContrat(c), user_id: u }))),
-      this.client.from('actes').upsert(d.catalogue.map((a) => ({ ...depuisActe(a), user_id: u }))),
+      this.client.from('lettres_cles').upsert(d.lettresCles.map((l, i) => ({ ...depuisLettre(l, i), user_id: u }))),
+      this.client.from('contrats').upsert(d.contrats.map((c, i) => ({ ...depuisContrat(c, i), user_id: u }))),
+      this.client.from('actes').upsert(d.catalogue.map((a, i) => ({ ...depuisActe(a, i), user_id: u }))),
       this.client.from('journees').upsert(d.journees.map((j) => ({ ...depuisJournee(j), user_id: u }))),
     ])
     const erreur = resultats.find((r) => r.error)?.error
@@ -90,9 +90,17 @@ export class DepotSupabase implements Depot {
 
 /* --- Correspondance colonnes SQL (snake_case) <-> modèle (camelCase) --- */
 
-type Rang = Record<string, any>
+export type Rang = Record<string, any>
 
-const versContrat = (r: Rang): Contrat => ({
+/**
+ * Remet les listes dans l'ordre choisi par l'utilisatrice : le serveur renvoie
+ * les rangs sans ordre garanti, alors que l'ordre des contrats se regle a la
+ * main et que celui du catalogue suit la grille.
+ */
+const parOrdre = (rangs: Rang[]): Rang[] =>
+  [...rangs].sort((a, b) => (a.ordre ?? 0) - (b.ordre ?? 0))
+
+export const versContrat = (r: Rang): Contrat => ({
   id: r.id,
   nom: r.nom,
   couleur: r.couleur,
@@ -105,7 +113,7 @@ const versContrat = (r: Rang): Contrat => ({
   notes: r.notes ?? undefined,
 })
 
-const depuisContrat = (c: Contrat) => ({
+export const depuisContrat = (c: Contrat, ordre = 0) => ({
   id: c.id,
   nom: c.nom,
   couleur: c.couleur,
@@ -116,23 +124,25 @@ const depuisContrat = (c: Contrat) => ({
   date_debut: c.dateDebut ?? null,
   date_fin: c.dateFin ?? null,
   notes: c.notes ?? null,
+  ordre,
 })
 
-const versLettre = (r: Rang): LettreCle => ({
+export const versLettre = (r: Rang): LettreCle => ({
   id: r.id,
   code: r.code,
   libelle: r.libelle,
   valeur: Number(r.valeur),
 })
 
-const depuisLettre = (l: LettreCle) => ({
+export const depuisLettre = (l: LettreCle, ordre = 0) => ({
   id: l.id,
   code: l.code,
   libelle: l.libelle,
   valeur: l.valeur,
+  ordre,
 })
 
-const versActe = (r: Rang): ActeCatalogue => ({
+export const versActe = (r: Rang): ActeCatalogue => ({
   id: r.id,
   code: r.code,
   libelle: r.libelle,
@@ -142,6 +152,7 @@ const versActe = (r: Rang): ActeCatalogue => ({
   lettreCleId: r.lettre_cle_id ?? undefined,
   coefficient: r.coefficient === null ? undefined : Number(r.coefficient),
   avec: r.avec ?? undefined,
+  court: r.court ?? undefined,
   tarif: Number(r.tarif),
   unite: r.unite,
   favori: r.favori,
@@ -152,7 +163,7 @@ const versActe = (r: Rang): ActeCatalogue => ({
   note: r.note ?? undefined,
 })
 
-const depuisActe = (a: ActeCatalogue) => ({
+export const depuisActe = (a: ActeCatalogue, ordre = 0) => ({
   id: a.id,
   code: a.code,
   libelle: a.libelle,
@@ -162,6 +173,7 @@ const depuisActe = (a: ActeCatalogue) => ({
   lettre_cle_id: a.lettreCleId ?? null,
   coefficient: a.coefficient ?? null,
   avec: a.avec ?? null,
+  court: a.court ?? null,
   tarif: a.tarif,
   unite: a.unite,
   favori: a.favori,
@@ -170,9 +182,10 @@ const depuisActe = (a: ActeCatalogue) => ({
   verifie: a.verifie,
   source: a.source ?? null,
   note: a.note ?? null,
+  ordre,
 })
 
-const versJournee = (r: Rang): Journee => ({
+export const versJournee = (r: Rang): Journee => ({
   id: r.id,
   date: r.date,
   contratId: r.contrat_id,
@@ -181,7 +194,7 @@ const versJournee = (r: Rang): Journee => ({
   updatedAt: r.updated_at,
 })
 
-const depuisJournee = (j: Journee) => ({
+export const depuisJournee = (j: Journee) => ({
   id: j.id,
   date: j.date,
   contrat_id: j.contratId,

@@ -4,7 +4,7 @@ import { versNombre } from '../domain/format'
 import { THEMES } from '../domain/types'
 import { exporterSauvegarde, lireSauvegarde } from '../export/fichiers'
 import { supabaseActif } from '../storage/supabase'
-import { connexionGoogle, deconnexion } from '../storage/session'
+import { connexionGoogle, connexionParCourriel, deconnexion } from '../storage/session'
 import { useSynchro } from '../store/SynchroContexte'
 import { IconeAlerte, IconeExport, IconeInfo } from '../components/Icones'
 import { useConfirmation } from '../components/Confirmation'
@@ -174,12 +174,32 @@ export function PageReglages() {
   )
 }
 
+/**
+ * Traduit les pannes les plus courantes. Les messages d'origine arrivent en
+ * anglais et ne disent pas quoi faire : ici, chaque phrase indique le geste
+ * suivant.
+ */
+function messageErreur(e: unknown): string {
+  const brut = e instanceof Error ? e.message : ''
+  if (/failed to fetch|networkerror|network request/i.test(brut))
+    return "Impossible de joindre le serveur. Vérifie ta connexion internet, puis réessaie."
+  if (/rate limit|too many/i.test(brut))
+    return "Trop de demandes d'affilée. Attends quelques minutes avant de redemander un lien."
+  if (/not enabled|disabled/i.test(brut))
+    return "Ce mode de connexion n'est pas encore activé côté serveur."
+  if (/invalid.*email/i.test(brut))
+    return "Cette adresse e-mail n'est pas valide."
+  return brut || 'Opération impossible'
+}
+
 /* --- Le compte, pour retrouver ses données sur un autre appareil ---------- */
 
 function CarteCompte() {
   const synchro = useSynchro()
   const [occupe, setOccupe] = useState(false)
   const [erreur, setErreur] = useState<string>()
+  const [courrielSaisi, setCourrielSaisi] = useState('')
+  const [envoye, setEnvoye] = useState(false)
 
   // Sans projet Supabase configuré, il n'y a pas de compte du tout : la carte
   // n'a rien à dire et ne s'affiche pas.
@@ -191,7 +211,7 @@ function CarteCompte() {
     try {
       await action()
     } catch (e) {
-      setErreur(e instanceof Error ? e.message : 'Opération impossible')
+      setErreur(messageErreur(e))
     } finally {
       setOccupe(false)
     }
@@ -211,8 +231,42 @@ function CarteCompte() {
               téléphone ou sur un ordinateur, et tu ne les perds pas en changeant
               d'appareil.
             </p>
+            {/* Le lien par courriel est propose en premier : il ne demande
+                aucun mot de passe a retenir, et rien a installer. */}
+            <form
+              className="formulaire-courriel"
+              onSubmit={(e) => {
+                e.preventDefault()
+                agir(async () => {
+                  await connexionParCourriel(courrielSaisi.trim())
+                  setEnvoye(true)
+                })
+              }}
+            >
+              <input
+                type="email" required autoComplete="email" inputMode="email"
+                placeholder="mon.adresse@gmail.com" value={courrielSaisi}
+                aria-label="Mon adresse e-mail"
+                onChange={(e) => { setEnvoye(false); setCourrielSaisi(e.target.value) }}
+              />
+              <button type="submit" className="btn principal" disabled={occupe}>
+                Recevoir mon lien
+              </button>
+            </form>
+
+            {envoye && (
+              <div className="note info">
+                <IconeInfo />
+                <span>
+                  Un lien vient de partir sur <strong>{courrielSaisi.trim()}</strong>.
+                  Ouvre-le depuis cet appareil pour te connecter. Pense a
+                  regarder dans les courriers indésirables.
+                </span>
+              </div>
+            )}
+
             <button
-              type="button" className="btn principal" disabled={occupe}
+              type="button" className="btn" disabled={occupe}
               onClick={() => agir(connexionGoogle)}
             >
               Se connecter avec Google

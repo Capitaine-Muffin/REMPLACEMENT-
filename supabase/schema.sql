@@ -28,6 +28,8 @@ create table if not exists public.lettres_cles (
   code       text not null,
   libelle    text not null default '',
   valeur     numeric(10, 2) not null default 0,
+  -- Rang d'affichage : le serveur ne garantit aucun ordre de lecture.
+  ordre      integer not null default 0,
   updated_at timestamptz not null default now(),
   primary key (user_id, id)
 );
@@ -48,6 +50,8 @@ create table if not exists public.contrats (
   date_debut        date,
   date_fin          date,
   notes             text,
+  -- Ordre d'affichage choisi a la main dans l'ecran Contrats.
+  ordre             integer not null default 0,
   updated_at        timestamptz not null default now(),
   primary key (user_id, id)
 );
@@ -67,6 +71,8 @@ create table if not exists public.actes (
   lettre_cle_id text,
   -- Actes avec lesquels celui-ci se cote habituellement.
   avec         text[],
+  -- Libelle court porte par la pastille correspondante (ex. « Frottis »).
+  court        text,
   coefficient   numeric(10, 3),
   tarif        numeric(10, 2) not null default 0,
   -- Une cotation au coefficient doit designer une lettre cle, un forfait non.
@@ -84,9 +90,17 @@ create table if not exists public.actes (
   verifie      boolean not null default false,
   source       text,
   note         text,
+  ordre        integer not null default 0,
   updated_at   timestamptz not null default now(),
   primary key (user_id, id)
 );
+
+-- Rattrapage pour un projet cree avant l'ajout de ces colonnes ---------------
+alter table public.lettres_cles add column if not exists ordre integer not null default 0;
+alter table public.contrats     add column if not exists ordre integer not null default 0;
+alter table public.actes        add column if not exists ordre integer not null default 0;
+alter table public.actes        add column if not exists court text;
+alter table public.actes        add column if not exists avec  text[];
 
 -- Feuilles journalieres --------------------------------------------------------
 -- Les lignes sont stockees en JSONB : elles n'existent jamais sans leur
@@ -106,10 +120,11 @@ create table if not exists public.journees (
 create index if not exists journees_user_date_idx on public.journees (user_id, date);
 
 -- Cloisonnement par utilisatrice (RLS) -----------------------------------------
-alter table public.profils  enable row level security;
-alter table public.contrats enable row level security;
-alter table public.actes    enable row level security;
-alter table public.journees enable row level security;
+alter table public.profils      enable row level security;
+alter table public.lettres_cles enable row level security;
+alter table public.contrats     enable row level security;
+alter table public.actes        enable row level security;
+alter table public.journees     enable row level security;
 
 do $$
 declare t text;

@@ -50,6 +50,21 @@ export async function connexionGoogle(): Promise<void> {
   if (error) throw error
 }
 
+/**
+ * Connexion par lien envoye sur la boite mail. Aucun mot de passe a retenir,
+ * et surtout aucun reglage a faire du cote de Google : c'est le chemin le plus
+ * court pour retrouver ses donnees sur un deuxieme appareil.
+ */
+export async function connexionParCourriel(courriel: string): Promise<void> {
+  const client = await obtenirClient()
+  const { error } = await client.auth.signInWithOtp({
+    email: courriel,
+    // Le lien du courriel ramene exactement sur cette page.
+    options: { emailRedirectTo: window.location.href.split('#')[0] },
+  })
+  if (error) throw error
+}
+
 export async function deconnexion(): Promise<void> {
   const client = await obtenirClient()
   const { error } = await client.auth.signOut()
